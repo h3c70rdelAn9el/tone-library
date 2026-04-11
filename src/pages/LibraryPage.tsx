@@ -32,7 +32,7 @@ export default function LibraryPage() {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="font-display text-4xl font-bold uppercase tracking-widest text-brand-text mb-1">
+        <h1 className="font-display text-4xl font-semibold tracking-tight text-brand-text mb-1">
           Tone Library
         </h1>
         <p className="text-brand-subtext text-sm">{mockTones.length} tones saved</p>
@@ -48,7 +48,7 @@ export default function LibraryPage() {
           placeholder="Search tones..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full max-w-md bg-brand-card border border-brand-border rounded-md pl-9 pr-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted focus:outline-none focus:border-brand-accent/50 transition-colors"
+          className="w-full max-w-md bg-brand-card border border-brand-border rounded-xl pl-9 pr-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted focus:outline-none focus:border-brand-accent/50 focus:ring-2 focus:ring-brand-accent/20 transition-colors"
         />
       </div>
 
@@ -56,10 +56,10 @@ export default function LibraryPage() {
         <button
           type="button"
           onClick={() => setActiveTag(null)}
-          className={`text-xs font-mono px-3 py-1 rounded-sm uppercase tracking-widest border transition-all ${
+          className={`font-body text-sm font-medium px-4 py-2 rounded-full border transition-all duration-200 ${
             activeTag === null
-              ? 'bg-brand-accent text-black border-brand-accent'
-              : 'bg-transparent text-brand-subtext border-brand-border hover:border-brand-accent/40'
+              ? 'bg-brand-accent text-black border-brand-accent shadow-[0_0_20px_-4px_rgba(232,255,71,0.45)]'
+              : 'bg-brand-card/60 text-brand-subtext border-brand-border hover:border-brand-accent/35 hover:text-brand-text'
           }`}
         >
           All
@@ -69,10 +69,10 @@ export default function LibraryPage() {
             type="button"
             key={tag}
             onClick={() => setActiveTag(activeTag === tag ? null : tag)}
-            className={`text-xs font-mono px-3 py-1 rounded-sm uppercase tracking-widest border transition-all ${
+            className={`font-body text-sm font-medium px-4 py-2 rounded-full border capitalize transition-all duration-200 ${
               activeTag === tag
-                ? 'bg-brand-accent text-black border-brand-accent'
-                : 'bg-transparent text-brand-subtext border-brand-border hover:border-brand-accent/40'
+                ? 'bg-brand-accent text-black border-brand-accent shadow-[0_0_20px_-4px_rgba(232,255,71,0.45)]'
+                : 'bg-brand-card/60 text-brand-subtext border-brand-border hover:border-brand-accent/35 hover:text-brand-text'
             }`}
           >
             {tag}

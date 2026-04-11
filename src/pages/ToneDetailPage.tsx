@@ -18,7 +18,7 @@ export default function ToneDetailPage() {
 
   if (!tone) {
     return (
-      <div className="p-8 text-brand-subtext font-mono text-sm">
+      <div className="p-8 text-brand-subtext font-body text-sm">
         Tone not found.{' '}
         <button
           type="button"
@@ -43,7 +43,7 @@ export default function ToneDetailPage() {
       </button>
 
       <div className="flex items-start justify-between mb-2">
-        <h1 className="font-display text-5xl font-bold uppercase tracking-widest text-brand-text leading-none">
+        <h1 className="font-display text-5xl font-semibold tracking-tight text-brand-text leading-none">
           {tone.name}
         </h1>
         {tone.favorite && (
@@ -54,7 +54,7 @@ export default function ToneDetailPage() {
         )}
       </div>
 
-      <p className="text-brand-muted font-mono text-xs mb-6">Added {tone.createdAt}</p>
+      <p className="text-brand-muted font-body text-xs mb-6">Added {tone.createdAt}</p>
 
       <div className="flex flex-wrap gap-2 mb-8">
         {tone.tags.map((tag) => (
@@ -62,15 +62,15 @@ export default function ToneDetailPage() {
         ))}
       </div>
 
-      <div className="bg-brand-card border border-brand-border rounded-lg p-5 mb-8">
-        <p className="text-xs font-mono uppercase tracking-widest text-brand-muted mb-3">
+      <div className="bg-brand-card border border-brand-border rounded-2xl p-5 mb-8">
+        <p className="text-xs font-body font-semibold uppercase tracking-wide text-brand-muted mb-3">
           Notes
         </p>
         <p className="text-brand-text text-sm leading-relaxed">{tone.notes}</p>
       </div>
 
-      <div className="bg-brand-card border border-brand-border rounded-lg p-5 mb-8">
-        <p className="text-xs font-mono uppercase tracking-widest text-brand-muted mb-4">
+      <div className="bg-brand-card border border-brand-border rounded-2xl p-5 mb-8">
+        <p className="text-xs font-body font-semibold uppercase tracking-wide text-brand-muted mb-4">
           Files
         </p>
         <div className="flex flex-col gap-3">
@@ -78,7 +78,7 @@ export default function ToneDetailPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 text-sm text-brand-subtext">
                 <FileAudio size={14} className="text-brand-accent" />
-                <span className="font-mono">{tone.namFile}</span>
+                <span className="font-body text-sm tabular-nums">{tone.namFile}</span>
               </div>
               <button
                 type="button"
@@ -93,7 +93,7 @@ export default function ToneDetailPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 text-sm text-brand-subtext">
                 <Mic2 size={14} className="text-brand-accent" />
-                <span className="font-mono">{tone.irFile}</span>
+                <span className="font-body text-sm tabular-nums">{tone.irFile}</span>
               </div>
               <button
                 type="button"
@@ -110,14 +110,14 @@ export default function ToneDetailPage() {
       <div className="flex gap-3">
         <button
           type="button"
-          className="flex items-center gap-2 text-sm bg-brand-card border border-brand-border text-brand-subtext px-4 py-2 rounded-md hover:text-brand-text hover:border-brand-accent/40 transition-all"
+          className="flex items-center gap-2 text-sm bg-brand-card border border-brand-border text-brand-subtext px-4 py-2 rounded-full hover:text-brand-text hover:border-brand-accent/40 transition-all"
         >
           <Pencil size={13} />
           Edit
         </button>
         <button
           type="button"
-          className="flex items-center gap-2 text-sm text-red-400/60 hover:text-red-400 px-4 py-2 rounded-md transition-colors"
+          className="flex items-center gap-2 text-sm text-red-400/60 hover:text-red-400 px-4 py-2 rounded-full transition-colors"
         >
           <Trash2 size={13} />
           Delete

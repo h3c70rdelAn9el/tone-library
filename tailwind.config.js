@@ -17,9 +17,9 @@ export default {
         },
       },
       fontFamily: {
-        display: ["'Barlow Condensed'", 'sans-serif'],
-        body: ["'DM Sans'", 'sans-serif'],
-        mono: ["'JetBrains Mono'", 'monospace'],
+        display: ["'Outfit'", 'system-ui', 'sans-serif'],
+        body: ["'Plus Jakarta Sans'", 'system-ui', 'sans-serif'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
     },
   },
