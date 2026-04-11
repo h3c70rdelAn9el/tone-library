@@ -9,7 +9,7 @@ export default {
           surface: '#16161a',
           card: '#1c1c22',
           border: '#2a2a35',
-          accent: '#e8ff47', // electric yellow-green
+          accent: '#e8ff47',
           accentDim: '#b8cc2e',
           muted: '#555566',
           text: '#e8e8f0',

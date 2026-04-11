@@ -1,25 +1,24 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { mockTones } from '../data/mockTones';
 import ToneCard from '../components/ToneCard';
 import EmptyState from '../components/EmptyState';
 import { Search } from 'lucide-react';
 
-const ALL_TAGS = [
-  'metal',
-  'clean',
-  'ambient',
-  'blues',
-  'djent',
-  'country',
-  'rhythm',
-  'lead',
-  'crunch',
-  'high-gain',
-] as const;
+function uniqueTagsFromMock(): string[] {
+  const set = new Set<string>();
+  for (const tone of mockTones) {
+    for (const tag of tone.tags) {
+      set.add(tag);
+    }
+  }
+  return Array.from(set).sort((a, b) => a.localeCompare(b));
+}
 
 export default function LibraryPage() {
   const [query, setQuery] = useState('');
   const [activeTag, setActiveTag] = useState<string | null>(null);
+
+  const allTags = useMemo(() => uniqueTagsFromMock(), []);
 
   const filtered = mockTones.filter((tone) => {
     const matchesQuery =
@@ -64,7 +63,7 @@ export default function LibraryPage() {
         >
           All
         </button>
-        {ALL_TAGS.map((tag) => (
+        {allTags.map((tag) => (
           <button
             type="button"
             key={tag}

@@ -1,19 +1,17 @@
-import { useState, type FormEvent } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload } from 'lucide-react';
+import { mockTones } from '../data/mockTones';
 
-const AVAILABLE_TAGS = [
-  'metal',
-  'clean',
-  'ambient',
-  'blues',
-  'djent',
-  'country',
-  'rhythm',
-  'lead',
-  'crunch',
-  'high-gain',
-] as const;
+function uniqueTagsFromMock(): string[] {
+  const set = new Set<string>();
+  for (const tone of mockTones) {
+    for (const tag of tone.tags) {
+      set.add(tag);
+    }
+  }
+  return Array.from(set).sort((a, b) => a.localeCompare(b));
+}
 
 export default function UploadPage() {
   const navigate = useNavigate();
@@ -21,15 +19,21 @@ export default function UploadPage() {
   const [notes, setNotes] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
+  const availableTags = useMemo(() => uniqueTagsFromMock(), []);
+
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
     );
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    alert(`Tone "${name}" would be saved here in Phase 2.`);
+  const handleSave = () => {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      alert('Please enter a tone name.');
+      return;
+    }
+    alert(`Tone "${trimmed}" would be saved in Phase 2.`);
     navigate('/');
   };
 
@@ -42,13 +46,12 @@ export default function UploadPage() {
         <p className="text-brand-subtext text-sm">Save a new tone to your library.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-body font-semibold uppercase tracking-wide text-brand-subtext">
             Tone Name *
           </label>
           <input
-            required
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Metal Rhythm Tight"
@@ -74,7 +77,7 @@ export default function UploadPage() {
             Tags
           </label>
           <div className="flex flex-wrap gap-2">
-            {AVAILABLE_TAGS.map((tag) => (
+            {availableTags.map((tag) => (
               <button
                 type="button"
                 key={tag}
@@ -103,7 +106,8 @@ export default function UploadPage() {
 
         <div className="flex gap-3 pt-2">
           <button
-            type="submit"
+            type="button"
+            onClick={handleSave}
             className="bg-brand-accent text-black font-display font-semibold text-sm px-6 py-2.5 rounded-full hover:bg-brand-accentDim shadow-[0_0_24px_-6px_rgba(232,255,71,0.5)] transition-colors"
           >
             Save Tone
@@ -116,7 +120,7 @@ export default function UploadPage() {
             Cancel
           </button>
         </div>
-      </form>
+      </div>
     </div>
   );
 }
