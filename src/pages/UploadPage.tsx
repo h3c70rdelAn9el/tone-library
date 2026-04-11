@@ -1,11 +1,12 @@
 import {
   useMemo,
+  useRef,
   useState,
   type ChangeEvent,
   type KeyboardEvent,
 } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, X } from 'lucide-react';
+import { FileAudio, Mic2, Upload, X } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { useToneStore } from '../store/useToneStore';
 import {
@@ -52,6 +53,9 @@ export default function UploadPage() {
   const [namFileObj, setNamFileObj] = useState<File | null>(null);
   const [irFileObj, setIrFileObj] = useState<File | null>(null);
   const [tagInput, setTagInput] = useState('');
+
+  const namInputRef = useRef<HTMLInputElement>(null);
+  const irInputRef = useRef<HTMLInputElement>(null);
 
   const availableTags = useMemo(() => uniqueTagsFromTones(tones), [tones]);
 
@@ -140,6 +144,22 @@ export default function UploadPage() {
     setIrFileObj(file);
     setIrFile(file.name);
     setIrFileURL(URL.createObjectURL(file));
+  };
+
+  const clearNamFile = () => {
+    if (namFileURL) URL.revokeObjectURL(namFileURL);
+    setNamFile('');
+    setNamFileURL(null);
+    setNamFileObj(null);
+    if (namInputRef.current) namInputRef.current.value = '';
+  };
+
+  const clearIrFile = () => {
+    if (irFileURL) URL.revokeObjectURL(irFileURL);
+    setIrFile('');
+    setIrFileURL(null);
+    setIrFileObj(null);
+    if (irInputRef.current) irInputRef.current.value = '';
   };
 
   const handleSave = async () => {
@@ -384,6 +404,7 @@ export default function UploadPage() {
             NAM file
           </label>
           <input
+            ref={namInputRef}
             id="nam-file-input"
             type="file"
             accept=".nam"
@@ -391,16 +412,37 @@ export default function UploadPage() {
             disabled={uploading}
             onChange={handleNamChange}
           />
-          <label
-            htmlFor="nam-file-input"
-            className={`flex cursor-pointer flex-col items-center justify-center border border-dashed border-brand-border rounded-2xl py-8 text-brand-muted text-sm gap-2 transition-colors hover:border-brand-accent/40 ${uploading ? 'pointer-events-none opacity-50' : ''}`}
-          >
-            <Upload size={16} />
-            Choose .nam file
-          </label>
           {namFile ? (
-            <p className="text-xs text-brand-muted font-mono">{namFile}</p>
-          ) : null}
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-brand-border bg-brand-card px-4 py-3">
+              <div className="flex min-w-0 flex-1 items-center gap-3">
+                <FileAudio
+                  size={18}
+                  className="shrink-0 text-brand-accent"
+                  aria-hidden
+                />
+                <span className="truncate font-mono text-sm text-brand-text">
+                  {namFile}
+                </span>
+              </div>
+              <button
+                type="button"
+                disabled={uploading}
+                onClick={clearNamFile}
+                className="shrink-0 rounded-lg p-1.5 text-brand-muted transition-colors hover:bg-brand-border/50 hover:text-brand-text disabled:opacity-50"
+                aria-label="Remove NAM file"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          ) : (
+            <label
+              htmlFor="nam-file-input"
+              className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-brand-border py-8 text-sm text-brand-muted transition-colors hover:border-brand-accent/40 ${uploading ? 'pointer-events-none opacity-50' : ''}`}
+            >
+              <Upload size={16} />
+              Choose .nam file
+            </label>
+          )}
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -411,6 +453,7 @@ export default function UploadPage() {
             IR file
           </label>
           <input
+            ref={irInputRef}
             id="ir-file-input"
             type="file"
             accept=".wav"
@@ -418,16 +461,37 @@ export default function UploadPage() {
             disabled={uploading}
             onChange={handleIrChange}
           />
-          <label
-            htmlFor="ir-file-input"
-            className={`flex cursor-pointer flex-col items-center justify-center border border-dashed border-brand-border rounded-2xl py-8 text-brand-muted text-sm gap-2 transition-colors hover:border-brand-accent/40 ${uploading ? 'pointer-events-none opacity-50' : ''}`}
-          >
-            <Upload size={16} />
-            Choose .wav file
-          </label>
           {irFile ? (
-            <p className="text-xs text-brand-muted font-mono">{irFile}</p>
-          ) : null}
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-brand-border bg-brand-card px-4 py-3">
+              <div className="flex min-w-0 flex-1 items-center gap-3">
+                <Mic2
+                  size={18}
+                  className="shrink-0 text-brand-accent"
+                  aria-hidden
+                />
+                <span className="truncate font-mono text-sm text-brand-text">
+                  {irFile}
+                </span>
+              </div>
+              <button
+                type="button"
+                disabled={uploading}
+                onClick={clearIrFile}
+                className="shrink-0 rounded-lg p-1.5 text-brand-muted transition-colors hover:bg-brand-border/50 hover:text-brand-text disabled:opacity-50"
+                aria-label="Remove IR file"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          ) : (
+            <label
+              htmlFor="ir-file-input"
+              className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-brand-border py-8 text-sm text-brand-muted transition-colors hover:border-brand-accent/40 ${uploading ? 'pointer-events-none opacity-50' : ''}`}
+            >
+              <Upload size={16} />
+              Choose .wav file
+            </label>
+          )}
         </div>
 
         <div className="flex gap-3 pt-2">
