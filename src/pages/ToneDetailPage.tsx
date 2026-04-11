@@ -1,5 +1,10 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useToneStore } from '../store/useToneStore';
+import {
+  deleteTone as deleteToneRemote,
+  toggleFavorite as toggleFavoriteRemote,
+} from '../services/toneService';
 import TagBadge from '../components/TagBadge';
 import {
   ArrowLeft,
@@ -21,12 +26,27 @@ function downloadBlob(url: string, filename: string) {
   a.remove();
 }
 
+function openOrDownloadFile(url: string, filename: string) {
+  if (url.startsWith('blob:')) {
+    downloadBlob(url, filename);
+    return;
+  }
+  if (/^https?:\/\//i.test(url)) {
+    window.open(url, '_blank', 'noopener,noreferrer');
+    return;
+  }
+  downloadBlob(url, filename);
+}
+
 export default function ToneDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const tone = useToneStore((s) => (id ? s.getToneById(id) : undefined));
-  const deleteTone = useToneStore((s) => s.deleteTone);
-  const toggleFavorite = useToneStore((s) => s.toggleFavorite);
+  const deleteToneLocal = useToneStore((s) => s.deleteTone);
+  const toggleFavoriteLocal = useToneStore((s) => s.toggleFavorite);
+
+  const [favoriteError, setFavoriteError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   if (!tone) {
     return (
@@ -43,10 +63,26 @@ export default function ToneDetailPage() {
     );
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!window.confirm('Delete this tone?')) return;
-    deleteTone(tone.id);
-    navigate('/');
+    setDeleteError(null);
+    const ok = await deleteToneRemote(tone.id);
+    if (ok) {
+      deleteToneLocal(tone.id);
+      navigate('/');
+    } else {
+      setDeleteError('Could not delete this tone on the server.');
+    }
+  };
+
+  const handleFavorite = async () => {
+    setFavoriteError(null);
+    const ok = await toggleFavoriteRemote(tone.id, tone.favorite);
+    if (ok) {
+      toggleFavoriteLocal(tone.id);
+    } else {
+      setFavoriteError('Could not update favorite.');
+    }
   };
 
   return (
@@ -64,21 +100,26 @@ export default function ToneDetailPage() {
         <h1 className="font-display text-5xl font-semibold tracking-tight text-brand-text leading-none min-w-0">
           {tone.name}
         </h1>
-        <button
-          type="button"
-          onClick={() => toggleFavorite(tone.id)}
-          className="shrink-0 p-1 rounded-md hover:bg-brand-border/40 transition-colors"
-          aria-label={tone.favorite ? 'Remove favorite' : 'Add favorite'}
-        >
-          <Star
-            size={18}
-            className={
-              tone.favorite
-                ? 'text-brand-accent fill-brand-accent'
-                : 'text-brand-subtext'
-            }
-          />
-        </button>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <button
+            type="button"
+            onClick={() => void handleFavorite()}
+            className="p-1 rounded-md hover:bg-brand-border/40 transition-colors"
+            aria-label={tone.favorite ? 'Remove favorite' : 'Add favorite'}
+          >
+            <Star
+              size={18}
+              className={
+                tone.favorite
+                  ? 'text-brand-accent fill-brand-accent'
+                  : 'text-brand-subtext'
+              }
+            />
+          </button>
+          {favoriteError ? (
+            <p className="text-xs text-red-400">{favoriteError}</p>
+          ) : null}
+        </div>
       </div>
 
       <p className="text-brand-muted font-body text-xs mb-6">Added {tone.createdAt}</p>
@@ -113,7 +154,10 @@ export default function ToneDetailPage() {
                 <button
                   type="button"
                   onClick={() =>
-                    downloadBlob(tone.namFileURL!, tone.namFile || 'tone.nam')
+                    openOrDownloadFile(
+                      tone.namFileURL!,
+                      tone.namFile || 'tone.nam',
+                    )
                   }
                   className="flex items-center gap-1.5 text-xs text-brand-muted hover:text-brand-accent transition-colors shrink-0"
                 >
@@ -137,7 +181,10 @@ export default function ToneDetailPage() {
                 <button
                   type="button"
                   onClick={() =>
-                    downloadBlob(tone.irFileURL!, tone.irFile || 'impulse.wav')
+                    openOrDownloadFile(
+                      tone.irFileURL!,
+                      tone.irFile || 'impulse.wav',
+                    )
                   }
                   className="flex items-center gap-1.5 text-xs text-brand-muted hover:text-brand-accent transition-colors shrink-0"
                 >
@@ -152,6 +199,10 @@ export default function ToneDetailPage() {
         </div>
       </div>
 
+      {deleteError ? (
+        <p className="mb-3 text-sm text-red-400">{deleteError}</p>
+      ) : null}
+
       <div className="flex gap-3">
         <button
           type="button"
@@ -162,7 +213,7 @@ export default function ToneDetailPage() {
         </button>
         <button
           type="button"
-          onClick={handleDelete}
+          onClick={() => void handleDelete()}
           className="flex items-center gap-2 text-sm text-red-400/60 hover:text-red-400 px-4 py-2 rounded-full transition-colors"
         >
           <Trash2 size={13} />

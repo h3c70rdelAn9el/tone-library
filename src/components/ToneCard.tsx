@@ -4,10 +4,11 @@ import TagBadge from './TagBadge';
 import clsx from 'clsx';
 import type { Tone } from '../types/tone';
 import { useToneStore } from '../store/useToneStore';
+import { toggleFavorite as toggleFavoriteRemote } from '../services/toneService';
 
 export default function ToneCard({ tone }: { tone: Tone }) {
   const navigate = useNavigate();
-  const toggleFavorite = useToneStore((s) => s.toggleFavorite);
+  const toggleFavoriteLocal = useToneStore((s) => s.toggleFavorite);
 
   return (
     <div
@@ -25,7 +26,10 @@ export default function ToneCard({ tone }: { tone: Tone }) {
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            toggleFavorite(tone.id);
+            void (async () => {
+              const ok = await toggleFavoriteRemote(tone.id, tone.favorite);
+              if (ok) toggleFavoriteLocal(tone.id);
+            })();
           }}
           className="shrink-0 p-0.5 rounded-md hover:bg-brand-border/40 transition-colors"
           aria-label={tone.favorite ? 'Remove favorite' : 'Add favorite'}

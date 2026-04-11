@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { Library, Upload, Guitar, type LucideIcon } from 'lucide-react';
 import clsx from 'clsx';
+import { useToneStore } from '../store/useToneStore';
 
 const links: { to: string; label: string; icon: LucideIcon }[] = [
   { to: '/', label: 'Library', icon: Library },
@@ -8,6 +9,8 @@ const links: { to: string; label: string; icon: LucideIcon }[] = [
 ];
 
 export default function Sidebar() {
+  const syncStatus = useToneStore((s) => s.syncStatus);
+
   return (
     <aside className="w-56 shrink-0 h-screen sticky top-0 flex flex-col border-r border-brand-border bg-brand-surface px-4 py-6">
       <div className="flex items-center gap-2 mb-10 px-2">
@@ -38,8 +41,28 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div className="mt-auto px-2 text-xs text-brand-muted font-body">
-        Phase 1 — Local
+      <div className="mt-auto space-y-2 px-2">
+        <div className="text-xs text-brand-muted font-body">Phase 3 — Supabase</div>
+        <div className="font-mono text-xs text-brand-muted">
+          {syncStatus === 'synced' && (
+            <span className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-green-400" />
+              Synced
+            </span>
+          )}
+          {syncStatus === 'local' && (
+            <span className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
+              Local only
+            </span>
+          )}
+          {syncStatus === 'error' && (
+            <span className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-red-400" />
+              Offline
+            </span>
+          )}
+        </div>
       </div>
     </aside>
   );

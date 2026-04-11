@@ -3,8 +3,13 @@ import { persist } from 'zustand/middleware';
 import { mockTones } from '../data/mockTones';
 import type { Tone } from '../types/tone';
 
+export type SyncStatus = 'synced' | 'local' | 'error';
+
 type ToneStore = {
   tones: Tone[];
+  syncStatus: SyncStatus;
+  setTones: (tones: Tone[]) => void;
+  setSyncStatus: (status: SyncStatus) => void;
   addTone: (tone: Tone) => void;
   deleteTone: (id: string) => void;
   toggleFavorite: (id: string) => void;
@@ -19,12 +24,19 @@ export const useToneStore = create<ToneStore>()(
   persist(
     (set, get) => ({
       tones: seedTones(),
+      syncStatus: 'local' as SyncStatus,
+      setTones: (tones) => set({ tones }),
+      setSyncStatus: (syncStatus) => set({ syncStatus }),
       addTone: (tone) => set((s) => ({ tones: [tone, ...s.tones] })),
       deleteTone: (id) =>
         set((s) => {
           const tone = s.tones.find((t) => t.id === id);
-          if (tone?.namFileURL) URL.revokeObjectURL(tone.namFileURL);
-          if (tone?.irFileURL) URL.revokeObjectURL(tone.irFileURL);
+          if (tone?.namFileURL?.startsWith('blob:')) {
+            URL.revokeObjectURL(tone.namFileURL);
+          }
+          if (tone?.irFileURL?.startsWith('blob:')) {
+            URL.revokeObjectURL(tone.irFileURL);
+          }
           return { tones: s.tones.filter((t) => t.id !== id) };
         }),
       toggleFavorite: (id) =>
@@ -37,9 +49,15 @@ export const useToneStore = create<ToneStore>()(
     }),
     {
       name: 'tone-library',
-      partialize: (state) => ({ tones: state.tones }),
+      partialize: (state) => ({
+        tones: state.tones,
+        syncStatus: state.syncStatus,
+      }),
       merge: (persistedState, currentState) => {
-        const p = persistedState as { tones?: Tone[] } | null | undefined;
+        const p = persistedState as {
+          tones?: Tone[];
+          syncStatus?: SyncStatus;
+        } | null;
         const raw = p?.tones;
         if (!raw || !Array.isArray(raw)) {
           return currentState;
@@ -51,6 +69,7 @@ export const useToneStore = create<ToneStore>()(
             namFileURL: t.namFileURL ?? null,
             irFileURL: t.irFileURL ?? null,
           })),
+          syncStatus: p?.syncStatus ?? currentState.syncStatus,
         };
       },
     },

@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useToneStore } from '../store/useToneStore';
+import { useTones } from '../hooks/useTones';
 import ToneCard from '../components/ToneCard';
 import EmptyState from '../components/EmptyState';
-import { Search } from 'lucide-react';
+import LoadingState from '../components/LoadingState';
+import { Search, X } from 'lucide-react';
 import type { Tone } from '../types/tone';
 
 function uniqueTagsFromTones(tones: Tone[]): string[] {
@@ -16,9 +18,11 @@ function uniqueTagsFromTones(tones: Tone[]): string[] {
 }
 
 export default function LibraryPage() {
-  const tones = useToneStore((s) => s.tones);
+  const { tones, loading, error } = useTones();
+  const syncStatus = useToneStore((s) => s.syncStatus);
   const [query, setQuery] = useState('');
   const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
   const allTags = useMemo(() => uniqueTagsFromTones(tones), [tones]);
 
@@ -30,8 +34,27 @@ export default function LibraryPage() {
     return matchesQuery && matchesTag;
   });
 
+  const showFallbackBanner =
+    (syncStatus === 'error' || error) && !bannerDismissed;
+
   return (
     <div className="p-8">
+      {showFallbackBanner ? (
+        <div className="mb-4 flex items-start justify-between gap-3 rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-400">
+          <p className="font-body">
+            Supabase unavailable — showing local data
+          </p>
+          <button
+            type="button"
+            onClick={() => setBannerDismissed(true)}
+            className="shrink-0 text-amber-400/80 hover:text-amber-400"
+            aria-label="Dismiss"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      ) : null}
+
       <div className="mb-8">
         <h1 className="font-display text-4xl font-semibold tracking-tight text-brand-text mb-1">
           Tone Library
@@ -81,7 +104,9 @@ export default function LibraryPage() {
         ))}
       </div>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <LoadingState />
+      ) : filtered.length === 0 ? (
         <EmptyState message="No tones match your search." />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
