@@ -1,5 +1,16 @@
 import supabase, { isSupabaseConfigured } from '../lib/supabase';
-import type { Tone } from '../types/tone';
+import type { AmpStyle, Tone } from '../types/tone';
+
+function parseAmpStyle(raw: string | null | undefined): AmpStyle | null {
+  if (raw == null || raw === '') return null;
+  const allowed: AmpStyle[] = [
+    'modern-black',
+    'vintage-cream',
+    'british-gold',
+    'custom-dark',
+  ];
+  return (allowed as string[]).includes(raw) ? (raw as AmpStyle) : null;
+}
 
 type DbToneRow = {
   id: string;
@@ -11,6 +22,7 @@ type DbToneRow = {
   nam_file_url: string | null;
   ir_file_url: string | null;
   favorite: boolean | null;
+  amp_style?: string | null;
   created_at: string;
 };
 
@@ -28,6 +40,7 @@ function rowToTone(row: DbToneRow): Tone {
     namFileURL: row.nam_file_url,
     irFileURL: row.ir_file_url,
     favorite: row.favorite ?? false,
+    ampStyle: parseAmpStyle(row.amp_style),
     createdAt: dateOnly,
   };
 }
@@ -161,6 +174,7 @@ export async function createTone(
     nam_file_url: tone.namFileURL,
     ir_file_url: tone.irFileURL,
     favorite: tone.favorite,
+    amp_style: tone.ampStyle ?? 'modern-black',
   };
 
   const { data, error } = await supabase

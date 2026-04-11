@@ -13,6 +13,7 @@ export const mockTones: Tone[] = [
     irFileURL: null,
     createdAt: '2025-03-10',
     favorite: true,
+    ampStyle: 'modern-black',
   },
   {
     id: '2',
@@ -25,6 +26,7 @@ export const mockTones: Tone[] = [
     irFileURL: null,
     createdAt: '2025-03-14',
     favorite: false,
+    ampStyle: 'vintage-cream',
   },
   {
     id: '3',
@@ -38,6 +40,7 @@ export const mockTones: Tone[] = [
     irFileURL: null,
     createdAt: '2025-03-18',
     favorite: true,
+    ampStyle: 'british-gold',
   },
   {
     id: '4',
@@ -51,6 +54,7 @@ export const mockTones: Tone[] = [
     irFileURL: null,
     createdAt: '2025-03-22',
     favorite: false,
+    ampStyle: 'vintage-cream',
   },
   {
     id: '5',
@@ -64,6 +68,7 @@ export const mockTones: Tone[] = [
     irFileURL: null,
     createdAt: '2025-04-01',
     favorite: false,
+    ampStyle: 'custom-dark',
   },
   {
     id: '6',
@@ -76,5 +81,6 @@ export const mockTones: Tone[] = [
     irFileURL: null,
     createdAt: '2025-04-05',
     favorite: true,
+    ampStyle: 'british-gold',
   },
 ];

@@ -1,3 +1,9 @@
+export type AmpStyle =
+  | 'modern-black'
+  | 'vintage-cream'
+  | 'british-gold'
+  | 'custom-dark';
+
 export interface Tone {
   id: string;
   name: string;
@@ -10,4 +16,5 @@ export interface Tone {
   irFileURL: string | null;
   createdAt: string;
   favorite: boolean;
+  ampStyle?: AmpStyle | null;
 }

@@ -14,7 +14,7 @@ import {
   uploadIrFile,
 } from '../services/toneService';
 import { isSupabaseConfigured } from '../lib/supabase';
-import type { Tone } from '../types/tone';
+import type { AmpStyle, Tone } from '../types/tone';
 import TagBadge from '../components/TagBadge';
 
 function uniqueTagsFromTones(tones: Tone[]): string[] {
@@ -37,6 +37,7 @@ export default function UploadPage() {
   const [notes, setNotes] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [favorite, setFavorite] = useState(false);
+  const [ampStyle, setAmpStyle] = useState<AmpStyle>('modern-black');
   const [nameError, setNameError] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -153,6 +154,7 @@ export default function UploadPage() {
         namFile,
         irFile,
         favorite,
+        ampStyle,
       };
 
       if (!isSupabaseConfigured()) {
@@ -206,7 +208,7 @@ export default function UploadPage() {
   };
 
   return (
-    <div className="p-8 max-w-xl">
+    <div className="h-full min-h-0 overflow-y-auto p-8 max-w-xl">
       <div className="mb-8">
         <h1 className="font-display text-4xl font-semibold tracking-tight text-brand-text mb-1">
           Add Tone
@@ -303,6 +305,30 @@ export default function UploadPage() {
               </button>
             ))}
           </div>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="amp-style-select"
+            className="text-xs font-body font-semibold uppercase tracking-wide text-brand-subtext"
+          >
+            Amp Style
+          </label>
+          <select
+            id="amp-style-select"
+            disabled={uploading}
+            value={ampStyle}
+            onChange={(e) => setAmpStyle(e.target.value as AmpStyle)}
+            className="bg-brand-card border border-brand-border rounded-xl px-4 py-2.5 text-sm text-brand-text focus:outline-none focus:border-brand-accent/50 focus:ring-2 focus:ring-brand-accent/20 transition-colors disabled:opacity-50"
+          >
+            <option value="modern-black">Modern / High Gain</option>
+            <option value="vintage-cream">Vintage / Clean</option>
+            <option value="british-gold">British / Classic</option>
+            <option value="custom-dark">Custom / Dark</option>
+          </select>
+          <p className="text-[11px] text-brand-muted">
+            Cosmetic look for the amp display. Optional — defaults to Modern.
+          </p>
         </div>
 
         <div className="flex flex-col gap-1.5">
