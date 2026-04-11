@@ -1,6 +1,11 @@
-import { useMemo, useState, type ChangeEvent } from 'react';
+import {
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type KeyboardEvent,
+} from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { useToneStore } from '../store/useToneStore';
 import {
@@ -10,6 +15,7 @@ import {
 } from '../services/toneService';
 import { isSupabaseConfigured } from '../lib/supabase';
 import type { Tone } from '../types/tone';
+import TagBadge from '../components/TagBadge';
 
 function uniqueTagsFromTones(tones: Tone[]): string[] {
   const set = new Set<string>();
@@ -41,13 +47,44 @@ export default function UploadPage() {
   const [irFileURL, setIrFileURL] = useState<string | null>(null);
   const [namFileObj, setNamFileObj] = useState<File | null>(null);
   const [irFileObj, setIrFileObj] = useState<File | null>(null);
+  const [tagInput, setTagInput] = useState('');
 
   const availableTags = useMemo(() => uniqueTagsFromTones(tones), [tones]);
+
+  const addTagString = (raw: string) => {
+    const t = raw.trim().replace(/^,+|,+$/g, '');
+    if (!t) return;
+    const lower = t.toLowerCase();
+    if (selectedTags.some((x) => x.toLowerCase() === lower)) return;
+    setSelectedTags((prev) => [...prev, t]);
+  };
+
+  const removeTag = (tag: string) => {
+    setSelectedTags((prev) => prev.filter((x) => x !== tag));
+  };
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
     );
+  };
+
+  const handleTagInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addTagString(tagInput);
+      setTagInput('');
+    }
+  };
+
+  const handleTagInputChange = (value: string) => {
+    if (value.includes(',')) {
+      const parts = value.split(',');
+      parts.slice(0, -1).forEach((p) => addTagString(p));
+      setTagInput(parts[parts.length - 1] ?? '');
+    } else {
+      setTagInput(value);
+    }
   };
 
   const handleNamChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -219,6 +256,36 @@ export default function UploadPage() {
           <label className="text-xs font-body font-semibold uppercase tracking-wide text-brand-subtext">
             Tags
           </label>
+          {selectedTags.length > 0 ? (
+            <div className="flex flex-wrap gap-2 mb-1">
+              {selectedTags.map((tag) => (
+                <div
+                  key={tag}
+                  className="inline-flex items-center gap-1"
+                >
+                  <TagBadge tag={tag} />
+                  <button
+                    type="button"
+                    disabled={uploading}
+                    onClick={() => removeTag(tag)}
+                    className="rounded p-0.5 text-brand-muted hover:text-brand-text disabled:opacity-50"
+                    aria-label={`Remove ${tag}`}
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          <input
+            type="text"
+            disabled={uploading}
+            value={tagInput}
+            onChange={(e) => handleTagInputChange(e.target.value)}
+            onKeyDown={handleTagInputKeyDown}
+            placeholder="Type a tag, press Enter or comma to add"
+            className="bg-brand-card border border-brand-border rounded-xl px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted focus:outline-none focus:border-brand-accent/50 focus:ring-2 focus:ring-brand-accent/20 transition-colors disabled:opacity-50"
+          />
           <div className="flex flex-wrap gap-2">
             {availableTags.map((tag) => (
               <button

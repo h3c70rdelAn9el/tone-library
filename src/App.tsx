@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import LibraryPage from './pages/LibraryPage';
+import FavoritesPage from './pages/FavoritesPage';
 import UploadPage from './pages/UploadPage';
 import ToneDetailPage from './pages/ToneDetailPage';
 
@@ -12,6 +13,7 @@ export default function App() {
         <main className="flex-1 overflow-y-auto">
           <Routes>
             <Route path="/" element={<LibraryPage />} />
+            <Route path="/favorites" element={<FavoritesPage />} />
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/tone/:id" element={<ToneDetailPage />} />
           </Routes>

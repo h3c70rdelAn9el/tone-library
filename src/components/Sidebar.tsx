@@ -1,15 +1,27 @@
 import { NavLink } from 'react-router-dom';
-import { Library, Upload, Guitar, type LucideIcon } from 'lucide-react';
+import {
+  Library,
+  Upload,
+  Guitar,
+  Star,
+  type LucideIcon,
+} from 'lucide-react';
 import clsx from 'clsx';
 import { useToneStore } from '../store/useToneStore';
 
-const links: { to: string; label: string; icon: LucideIcon }[] = [
-  { to: '/', label: 'Library', icon: Library },
-  { to: '/upload', label: 'Add Tone', icon: Upload },
-];
+const links: { to: string; label: string; icon: LucideIcon; end?: boolean }[] =
+  [
+    { to: '/', label: 'Library', icon: Library, end: true },
+    { to: '/favorites', label: 'Favorites', icon: Star },
+    { to: '/upload', label: 'Add Tone', icon: Upload },
+  ];
 
 export default function Sidebar() {
   const syncStatus = useToneStore((s) => s.syncStatus);
+  const totalTones = useToneStore((s) => s.tones.length);
+  const favoriteCount = useToneStore(
+    (s) => s.tones.filter((t) => t.favorite).length,
+  );
 
   return (
     <aside className="w-56 shrink-0 h-screen sticky top-0 flex flex-col border-r border-brand-border bg-brand-surface px-4 py-6">
@@ -21,22 +33,29 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex flex-col gap-1">
-        {links.map(({ to, label, icon: Icon }) => (
+        {links.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}
-            end={to === '/'}
+            end={end ?? false}
             className={({ isActive }) =>
               clsx(
-                'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all',
+                'flex flex-col gap-1 rounded-xl px-3 py-2.5 text-sm transition-all',
                 isActive
                   ? 'bg-brand-accent/10 text-brand-accent font-medium'
                   : 'text-brand-subtext hover:text-brand-text hover:bg-brand-border/40',
               )
             }
           >
-            <Icon size={16} />
-            {label}
+            <div className="flex items-center gap-3">
+              <Icon size={16} />
+              <span>{label}</span>
+            </div>
+            {(to === '/' || to === '/favorites') && (
+              <span className="ml-7 inline-flex w-fit rounded-md bg-brand-border px-1.5 py-0.5 font-mono text-[10px] text-brand-subtext">
+                {to === '/' ? totalTones : favoriteCount}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>

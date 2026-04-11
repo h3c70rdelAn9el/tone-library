@@ -8,8 +8,16 @@ export type SyncStatus = 'synced' | 'local' | 'error';
 type ToneStore = {
   tones: Tone[];
   syncStatus: SyncStatus;
+  searchQuery: string;
+  activeTags: string[];
+  favoritesOnly: boolean;
   setTones: (tones: Tone[]) => void;
   setSyncStatus: (status: SyncStatus) => void;
+  setSearchQuery: (q: string) => void;
+  setActiveTags: (tags: string[]) => void;
+  toggleActiveTag: (tag: string) => void;
+  setFavoritesOnly: (val: boolean) => void;
+  clearFilters: () => void;
   addTone: (tone: Tone) => void;
   deleteTone: (id: string) => void;
   toggleFavorite: (id: string) => void;
@@ -25,8 +33,22 @@ export const useToneStore = create<ToneStore>()(
     (set, get) => ({
       tones: seedTones(),
       syncStatus: 'local' as SyncStatus,
+      searchQuery: '',
+      activeTags: [] as string[],
+      favoritesOnly: false,
       setTones: (tones) => set({ tones }),
       setSyncStatus: (syncStatus) => set({ syncStatus }),
+      setSearchQuery: (searchQuery) => set({ searchQuery }),
+      setActiveTags: (activeTags) => set({ activeTags }),
+      toggleActiveTag: (tag) =>
+        set((s) => ({
+          activeTags: s.activeTags.includes(tag)
+            ? s.activeTags.filter((t) => t !== tag)
+            : [...s.activeTags, tag],
+        })),
+      setFavoritesOnly: (favoritesOnly) => set({ favoritesOnly }),
+      clearFilters: () =>
+        set({ searchQuery: '', activeTags: [], favoritesOnly: false }),
       addTone: (tone) => set((s) => ({ tones: [tone, ...s.tones] })),
       deleteTone: (id) =>
         set((s) => {

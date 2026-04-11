@@ -44,6 +44,8 @@ export default function ToneDetailPage() {
   const tone = useToneStore((s) => (id ? s.getToneById(id) : undefined));
   const deleteToneLocal = useToneStore((s) => s.deleteTone);
   const toggleFavoriteLocal = useToneStore((s) => s.toggleFavorite);
+  const clearFilters = useToneStore((s) => s.clearFilters);
+  const toggleActiveTag = useToneStore((s) => s.toggleActiveTag);
 
   const [favoriteError, setFavoriteError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -126,7 +128,15 @@ export default function ToneDetailPage() {
 
       <div className="flex flex-wrap gap-2 mb-8">
         {tone.tags.map((tag) => (
-          <TagBadge key={tag} tag={tag} />
+          <TagBadge
+            key={tag}
+            tag={tag}
+            onClick={() => {
+              clearFilters();
+              toggleActiveTag(tag);
+              navigate('/');
+            }}
+          />
         ))}
       </div>
 

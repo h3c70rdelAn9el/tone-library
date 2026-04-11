@@ -56,6 +56,94 @@ export async function fetchAllTones(): Promise<Tone[]> {
   return tones ?? [];
 }
 
+/** Client-side filter when Supabase search is unavailable. */
+export function filterTonesLocally(
+  tones: Tone[],
+  query: string,
+  tags: string[],
+  favoritesOnly: boolean,
+): Tone[] {
+  const q = query.trim().toLowerCase();
+  return tones.filter((tone) => {
+    if (favoritesOnly && !tone.favorite) return false;
+    if (tags.length > 0 && !tags.every((t) => tone.tags.includes(t))) {
+      return false;
+    }
+    if (q) {
+      const hay =
+        `${tone.name} ${tone.notes} ${tone.tags.join(' ')}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+/** Returns null on request failure (same as tryFetchAllTones). */
+export async function trySearchTones(
+  query: string,
+  tags: string[],
+  favoritesOnly: boolean,
+): Promise<Tone[] | null> {
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
+
+  let q = supabase.from('tones').select('*').order('created_at', { ascending: false });
+
+  if (query.trim()) {
+    q = q.textSearch('search_vector', query.trim(), {
+      type: 'plain',
+      config: 'english',
+    });
+  }
+  if (tags.length > 0) {
+    q = q.contains('tags', tags);
+  }
+  if (favoritesOnly) {
+    q = q.eq('favorite', true);
+  }
+
+  const { data, error } = await q;
+
+  if (error) {
+    console.error(error);
+    return null;
+  }
+
+  return ((data ?? []) as DbToneRow[]).map(rowToTone);
+}
+
+export async function searchTones(
+  query: string,
+  tags: string[],
+  favoritesOnly: boolean,
+): Promise<Tone[]> {
+  const r = await trySearchTones(query, tags, favoritesOnly);
+  return r ?? [];
+}
+
+export async function fetchAllTags(): Promise<string[]> {
+  if (!isSupabaseConfigured()) {
+    return [];
+  }
+
+  const { data, error } = await supabase.from('tones').select('tags');
+
+  if (error) {
+    console.error(error);
+    return [];
+  }
+
+  const set = new Set<string>();
+  for (const row of data ?? []) {
+    const tags = (row as { tags: string[] | null }).tags;
+    if (tags) {
+      for (const t of tags) set.add(t);
+    }
+  }
+  return Array.from(set).sort((a, b) => a.localeCompare(b));
+}
+
 export async function createTone(
   tone: Omit<Tone, 'id' | 'createdAt'>,
 ): Promise<Tone | null> {
