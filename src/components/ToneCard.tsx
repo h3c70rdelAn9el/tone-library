@@ -2,10 +2,12 @@ import { useNavigate } from 'react-router-dom';
 import { Star, FileAudio, Mic2 } from 'lucide-react';
 import TagBadge from './TagBadge';
 import clsx from 'clsx';
-import type { Tone } from '../data/mockTones';
+import type { Tone } from '../types/tone';
+import { useToneStore } from '../store/useToneStore';
 
 export default function ToneCard({ tone }: { tone: Tone }) {
   const navigate = useNavigate();
+  const toggleFavorite = useToneStore((s) => s.toggleFavorite);
 
   return (
     <div
@@ -15,16 +17,28 @@ export default function ToneCard({ tone }: { tone: Tone }) {
         'hover:border-brand-accent/50 hover:bg-brand-surface transition-all duration-200',
       )}
     >
-      <div className="flex items-start justify-between mb-3">
-        <h3 className="font-display text-xl font-semibold text-brand-text tracking-tight leading-snug group-hover:text-brand-accent transition-colors">
+      <div className="flex items-start justify-between mb-3 gap-2">
+        <h3 className="font-display text-xl font-semibold text-brand-text tracking-tight leading-snug group-hover:text-brand-accent transition-colors min-w-0">
           {tone.name}
         </h3>
-        {tone.favorite && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleFavorite(tone.id);
+          }}
+          className="shrink-0 p-0.5 rounded-md hover:bg-brand-border/40 transition-colors"
+          aria-label={tone.favorite ? 'Remove favorite' : 'Add favorite'}
+        >
           <Star
             size={14}
-            className="text-brand-accent fill-brand-accent shrink-0 mt-1 ml-2"
+            className={
+              tone.favorite
+                ? 'text-brand-accent fill-brand-accent'
+                : 'text-brand-subtext'
+            }
           />
-        )}
+        </button>
       </div>
 
       <p className="text-brand-subtext text-sm leading-relaxed mb-4 line-clamp-2">

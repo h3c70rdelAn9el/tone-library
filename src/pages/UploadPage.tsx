@@ -1,11 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload } from 'lucide-react';
-import { mockTones } from '../data/mockTones';
+import { v4 as uuidv4 } from 'uuid';
+import { useToneStore } from '../store/useToneStore';
+import type { Tone } from '../types/tone';
 
-function uniqueTagsFromMock(): string[] {
+function uniqueTagsFromTones(tones: Tone[]): string[] {
   const set = new Set<string>();
-  for (const tone of mockTones) {
+  for (const tone of tones) {
     for (const tag of tone.tags) {
       set.add(tag);
     }
@@ -15,11 +17,21 @@ function uniqueTagsFromMock(): string[] {
 
 export default function UploadPage() {
   const navigate = useNavigate();
+  const tones = useToneStore((s) => s.tones);
+  const addTone = useToneStore((s) => s.addTone);
+
   const [name, setName] = useState('');
   const [notes, setNotes] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [favorite, setFavorite] = useState(false);
+  const [nameError, setNameError] = useState('');
 
-  const availableTags = useMemo(() => uniqueTagsFromMock(), []);
+  const [namFile, setNamFile] = useState('');
+  const [irFile, setIrFile] = useState('');
+  const [namFileURL, setNamFileURL] = useState<string | null>(null);
+  const [irFileURL, setIrFileURL] = useState<string | null>(null);
+
+  const availableTags = useMemo(() => uniqueTagsFromTones(tones), [tones]);
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -27,13 +39,52 @@ export default function UploadPage() {
     );
   };
 
+  const handleNamChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (namFileURL) URL.revokeObjectURL(namFileURL);
+    if (!file) {
+      setNamFile('');
+      setNamFileURL(null);
+      return;
+    }
+    setNamFile(file.name);
+    setNamFileURL(URL.createObjectURL(file));
+  };
+
+  const handleIrChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (irFileURL) URL.revokeObjectURL(irFileURL);
+    if (!file) {
+      setIrFile('');
+      setIrFileURL(null);
+      return;
+    }
+    setIrFile(file.name);
+    setIrFileURL(URL.createObjectURL(file));
+  };
+
   const handleSave = () => {
     const trimmed = name.trim();
     if (!trimmed) {
-      alert('Please enter a tone name.');
+      setNameError('Name is required.');
       return;
     }
-    alert(`Tone "${trimmed}" would be saved in Phase 2.`);
+    setNameError('');
+
+    const newTone: Tone = {
+      id: uuidv4(),
+      name: trimmed,
+      tags: selectedTags,
+      notes: notes.trim(),
+      namFile,
+      irFile,
+      namFileURL,
+      irFileURL,
+      createdAt: new Date().toISOString().slice(0, 10),
+      favorite,
+    };
+
+    addTone(newTone);
     navigate('/');
   };
 
@@ -53,10 +104,16 @@ export default function UploadPage() {
           </label>
           <input
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              setName(e.target.value);
+              if (nameError) setNameError('');
+            }}
             placeholder="e.g. Metal Rhythm Tight"
             className="bg-brand-card border border-brand-border rounded-xl px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted focus:outline-none focus:border-brand-accent/50 focus:ring-2 focus:ring-brand-accent/20 transition-colors"
           />
+          {nameError ? (
+            <p className="text-sm text-red-400">{nameError}</p>
+          ) : null}
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -96,12 +153,71 @@ export default function UploadPage() {
 
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-body font-semibold uppercase tracking-wide text-brand-subtext">
-            NAM File (Phase 2)
+            Favorite
           </label>
-          <div className="flex items-center justify-center border border-dashed border-brand-border rounded-2xl py-8 text-brand-muted text-sm gap-2">
+          <button
+            type="button"
+            onClick={() => setFavorite((f) => !f)}
+            className={`font-body text-sm font-medium px-4 py-2 rounded-full border w-fit transition-all duration-200 ${
+              favorite
+                ? 'bg-brand-accent text-black border-brand-accent shadow-[0_0_20px_-4px_rgba(232,255,71,0.45)]'
+                : 'bg-brand-card/60 text-brand-subtext border-brand-border hover:border-brand-accent/35 hover:text-brand-text'
+            }`}
+          >
+            {favorite ? 'Favorited' : 'Not favorited'}
+          </button>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="nam-file-input"
+            className="text-xs font-body font-semibold uppercase tracking-wide text-brand-subtext"
+          >
+            NAM file
+          </label>
+          <input
+            id="nam-file-input"
+            type="file"
+            accept=".nam"
+            className="sr-only"
+            onChange={handleNamChange}
+          />
+          <label
+            htmlFor="nam-file-input"
+            className="flex cursor-pointer flex-col items-center justify-center border border-dashed border-brand-border rounded-2xl py-8 text-brand-muted text-sm gap-2 transition-colors hover:border-brand-accent/40"
+          >
             <Upload size={16} />
-            File upload coming in Phase 2
-          </div>
+            Choose .nam file
+          </label>
+          {namFile ? (
+            <p className="text-xs text-brand-muted font-mono">{namFile}</p>
+          ) : null}
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="ir-file-input"
+            className="text-xs font-body font-semibold uppercase tracking-wide text-brand-subtext"
+          >
+            IR file
+          </label>
+          <input
+            id="ir-file-input"
+            type="file"
+            accept=".wav"
+            className="sr-only"
+            onChange={handleIrChange}
+          />
+          <label
+            htmlFor="ir-file-input"
+            className="flex cursor-pointer flex-col items-center justify-center border border-dashed border-brand-border rounded-2xl py-8 text-brand-muted text-sm gap-2 transition-colors hover:border-brand-accent/40"
+          >
+            <Upload size={16} />
+            Choose .wav file
+          </label>
+          {irFile ? (
+            <p className="text-xs text-brand-muted font-mono">{irFile}</p>
+          ) : null}
         </div>
 
         <div className="flex gap-3 pt-2">

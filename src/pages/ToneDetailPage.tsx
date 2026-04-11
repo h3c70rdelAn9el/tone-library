@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { mockTones } from '../data/mockTones';
+import { useToneStore } from '../store/useToneStore';
 import TagBadge from '../components/TagBadge';
 import {
   ArrowLeft,
@@ -11,10 +11,22 @@ import {
   Pencil,
 } from 'lucide-react';
 
+function downloadBlob(url: string, filename: string) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename || 'download';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
 export default function ToneDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const tone = mockTones.find((t) => t.id === id);
+  const tone = useToneStore((s) => (id ? s.getToneById(id) : undefined));
+  const deleteTone = useToneStore((s) => s.deleteTone);
+  const toggleFavorite = useToneStore((s) => s.toggleFavorite);
 
   if (!tone) {
     return (
@@ -31,6 +43,12 @@ export default function ToneDetailPage() {
     );
   }
 
+  const handleDelete = () => {
+    if (!window.confirm('Delete this tone?')) return;
+    deleteTone(tone.id);
+    navigate('/');
+  };
+
   return (
     <div className="p-8 max-w-2xl">
       <button
@@ -42,16 +60,25 @@ export default function ToneDetailPage() {
         Back to Library
       </button>
 
-      <div className="flex items-start justify-between mb-2">
-        <h1 className="font-display text-5xl font-semibold tracking-tight text-brand-text leading-none">
+      <div className="flex items-start justify-between mb-2 gap-4">
+        <h1 className="font-display text-5xl font-semibold tracking-tight text-brand-text leading-none min-w-0">
           {tone.name}
         </h1>
-        {tone.favorite && (
+        <button
+          type="button"
+          onClick={() => toggleFavorite(tone.id)}
+          className="shrink-0 p-1 rounded-md hover:bg-brand-border/40 transition-colors"
+          aria-label={tone.favorite ? 'Remove favorite' : 'Add favorite'}
+        >
           <Star
             size={18}
-            className="text-brand-accent fill-brand-accent mt-1 ml-4 shrink-0"
+            className={
+              tone.favorite
+                ? 'text-brand-accent fill-brand-accent'
+                : 'text-brand-subtext'
+            }
           />
-        )}
+        </button>
       </div>
 
       <p className="text-brand-muted font-body text-xs mb-6">Added {tone.createdAt}</p>
@@ -74,34 +101,52 @@ export default function ToneDetailPage() {
           Files
         </p>
         <div className="flex flex-col gap-3">
-          {tone.namFile && (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 text-sm text-brand-subtext">
-                <FileAudio size={14} className="text-brand-accent" />
-                <span className="font-body text-sm tabular-nums">{tone.namFile}</span>
+          {(tone.namFile || tone.namFileURL) && (
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3 text-sm text-brand-subtext min-w-0">
+                <FileAudio size={14} className="text-brand-accent shrink-0" />
+                <span className="font-body text-sm tabular-nums truncate">
+                  {tone.namFile || 'NAM file'}
+                </span>
               </div>
-              <button
-                type="button"
-                className="flex items-center gap-1.5 text-xs text-brand-muted hover:text-brand-accent transition-colors"
-              >
-                <Download size={12} />
-                Download
-              </button>
+              {tone.namFileURL ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    downloadBlob(tone.namFileURL!, tone.namFile || 'tone.nam')
+                  }
+                  className="flex items-center gap-1.5 text-xs text-brand-muted hover:text-brand-accent transition-colors shrink-0"
+                >
+                  <Download size={12} />
+                  Download
+                </button>
+              ) : (
+                <span className="text-xs text-brand-muted">No file attached</span>
+              )}
             </div>
           )}
-          {tone.irFile && (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 text-sm text-brand-subtext">
-                <Mic2 size={14} className="text-brand-accent" />
-                <span className="font-body text-sm tabular-nums">{tone.irFile}</span>
+          {(tone.irFile || tone.irFileURL) && (
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3 text-sm text-brand-subtext min-w-0">
+                <Mic2 size={14} className="text-brand-accent shrink-0" />
+                <span className="font-body text-sm tabular-nums truncate">
+                  {tone.irFile || 'IR file'}
+                </span>
               </div>
-              <button
-                type="button"
-                className="flex items-center gap-1.5 text-xs text-brand-muted hover:text-brand-accent transition-colors"
-              >
-                <Download size={12} />
-                Download
-              </button>
+              {tone.irFileURL ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    downloadBlob(tone.irFileURL!, tone.irFile || 'impulse.wav')
+                  }
+                  className="flex items-center gap-1.5 text-xs text-brand-muted hover:text-brand-accent transition-colors shrink-0"
+                >
+                  <Download size={12} />
+                  Download
+                </button>
+              ) : (
+                <span className="text-xs text-brand-muted">No file attached</span>
+              )}
             </div>
           )}
         </div>
@@ -117,6 +162,7 @@ export default function ToneDetailPage() {
         </button>
         <button
           type="button"
+          onClick={handleDelete}
           className="flex items-center gap-2 text-sm text-red-400/60 hover:text-red-400 px-4 py-2 rounded-full transition-colors"
         >
           <Trash2 size={13} />

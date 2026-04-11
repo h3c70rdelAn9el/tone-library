@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
-import { mockTones } from '../data/mockTones';
+import { useToneStore } from '../store/useToneStore';
 import ToneCard from '../components/ToneCard';
 import EmptyState from '../components/EmptyState';
 import { Search } from 'lucide-react';
+import type { Tone } from '../types/tone';
 
-function uniqueTagsFromMock(): string[] {
+function uniqueTagsFromTones(tones: Tone[]): string[] {
   const set = new Set<string>();
-  for (const tone of mockTones) {
+  for (const tone of tones) {
     for (const tag of tone.tags) {
       set.add(tag);
     }
@@ -15,12 +16,13 @@ function uniqueTagsFromMock(): string[] {
 }
 
 export default function LibraryPage() {
+  const tones = useToneStore((s) => s.tones);
   const [query, setQuery] = useState('');
   const [activeTag, setActiveTag] = useState<string | null>(null);
 
-  const allTags = useMemo(() => uniqueTagsFromMock(), []);
+  const allTags = useMemo(() => uniqueTagsFromTones(tones), [tones]);
 
-  const filtered = mockTones.filter((tone) => {
+  const filtered = tones.filter((tone) => {
     const matchesQuery =
       tone.name.toLowerCase().includes(query.toLowerCase()) ||
       tone.notes.toLowerCase().includes(query.toLowerCase());
@@ -34,7 +36,7 @@ export default function LibraryPage() {
         <h1 className="font-display text-4xl font-semibold tracking-tight text-brand-text mb-1">
           Tone Library
         </h1>
-        <p className="text-brand-subtext text-sm">{mockTones.length} tones saved</p>
+        <p className="text-brand-subtext text-sm">{tones.length} tones saved</p>
       </div>
 
       <div className="relative mb-5">

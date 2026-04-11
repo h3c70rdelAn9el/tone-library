@@ -1,13 +1,4 @@
-export interface Tone {
-  id: string;
-  name: string;
-  tags: string[];
-  notes: string;
-  namFile: string;
-  irFile: string;
-  createdAt: string;
-  favorite: boolean;
-}
+import type { Tone } from '../types/tone';
 
 export const mockTones: Tone[] = [
   {
@@ -18,6 +9,8 @@ export const mockTones: Tone[] = [
       'Recto-style crunch. Tight low end, scooped mids. Works great for down-tuned riffs.',
     namFile: 'metal_rhythm_tight.nam',
     irFile: 'mesa_v30_close.wav',
+    namFileURL: null,
+    irFileURL: null,
     createdAt: '2025-03-10',
     favorite: true,
   },
@@ -28,6 +21,8 @@ export const mockTones: Tone[] = [
     notes: 'Fender-style clean. Very glassy and responsive. Blooms with reverb.',
     namFile: 'clean_glassy_strat.nam',
     irFile: 'tweed_sm57.wav',
+    namFileURL: null,
+    irFileURL: null,
     createdAt: '2025-03-14',
     favorite: false,
   },
@@ -39,6 +34,8 @@ export const mockTones: Tone[] = [
       "Mid-forward crunch. Plays well with the guitar's volume knob. Think SRV.",
     namFile: 'blues_crunch_od.nam',
     irFile: 'greenback_ribbon.wav',
+    namFileURL: null,
+    irFileURL: null,
     createdAt: '2025-03-18',
     favorite: true,
   },
@@ -50,6 +47,8 @@ export const mockTones: Tone[] = [
       'Washy, reverb-heavy lead tone. Shimmer-friendly. Good for soundscapes.',
     namFile: 'ambient_post_lead.nam',
     irFile: 'church_ir_stereo.wav',
+    namFileURL: null,
+    irFileURL: null,
     createdAt: '2025-03-22',
     favorite: false,
   },
@@ -61,6 +60,8 @@ export const mockTones: Tone[] = [
       'Extremely tight modern high gain. Boosted with Horizon Drive impulse. Drop A capable.',
     namFile: 'djent_modern_hg.nam',
     irFile: 'ownhammer_6505.wav',
+    namFileURL: null,
+    irFileURL: null,
     createdAt: '2025-04-01',
     favorite: false,
   },
@@ -71,6 +72,8 @@ export const mockTones: Tone[] = [
     notes: 'Bright and spanky. Nashville tone. Telecaster pairs perfectly.',
     namFile: 'country_twang_clean.nam',
     irFile: 'tweed_deluxe_1x12.wav',
+    namFileURL: null,
+    irFileURL: null,
     createdAt: '2025-04-05',
     favorite: true,
   },
