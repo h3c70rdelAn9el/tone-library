@@ -16,6 +16,9 @@ import {
 import { isSupabaseConfigured } from '../lib/supabase';
 import type { AmpStyle, Tone } from '../types/tone';
 import TagBadge from '../components/TagBadge';
+import AmpHead from '../components/AmpHead';
+import AmpCabinet from '../components/AmpCabinet';
+import { resolveAmpTheme } from '../lib/ampThemes';
 
 function uniqueTagsFromTones(tones: Tone[]): string[] {
   const set = new Set<string>();
@@ -51,6 +54,29 @@ export default function UploadPage() {
   const [tagInput, setTagInput] = useState('');
 
   const availableTags = useMemo(() => uniqueTagsFromTones(tones), [tones]);
+
+  /** Live amp preview from current form fields (not persisted). */
+  const previewTone = useMemo(
+    (): Tone => ({
+      id: 'upload-preview',
+      name: name.trim() || 'Your tone name',
+      tags: selectedTags,
+      notes: notes.trim(),
+      namFile: namFile || '',
+      irFile: irFile || '',
+      namFileURL: null,
+      irFileURL: null,
+      createdAt: new Date().toISOString().slice(0, 10),
+      favorite,
+      ampStyle,
+    }),
+    [name, selectedTags, notes, namFile, irFile, favorite, ampStyle],
+  );
+
+  const previewTheme = useMemo(
+    () => resolveAmpTheme(previewTone),
+    [previewTone],
+  );
 
   const addTagString = (raw: string) => {
     const t = raw.trim().replace(/^,+|,+$/g, '');
@@ -208,7 +234,8 @@ export default function UploadPage() {
   };
 
   return (
-    <div className="h-full min-h-0 overflow-y-auto p-8 max-w-xl">
+    <div className="flex h-full min-h-0 flex-col lg:flex-row lg:overflow-hidden">
+      <div className="min-h-0 flex-1 overflow-y-auto p-8 lg:max-w-xl lg:shrink-0 lg:border-r lg:border-brand-border">
       <div className="mb-8">
         <h1 className="font-display text-4xl font-semibold tracking-tight text-brand-text mb-1">
           Add Tone
@@ -422,6 +449,24 @@ export default function UploadPage() {
           </button>
         </div>
       </div>
+      </div>
+
+      <aside
+        className="flex min-h-[280px] shrink-0 flex-col items-center justify-center gap-2 border-t border-brand-border bg-brand-card/20 px-4 py-10 lg:min-h-0 lg:flex-1 lg:border-l lg:border-t-0 lg:overflow-y-auto lg:px-6 lg:py-12"
+        aria-label="Amp preview"
+      >
+        <p className="mb-2 font-body text-[11px] font-semibold uppercase tracking-wider text-brand-muted">
+          Library preview
+        </p>
+        <div className="w-full max-w-md">
+          <AmpHead tone={previewTone} theme={previewTheme} />
+          <AmpCabinet theme={previewTheme} />
+        </div>
+        <p className="mt-2 max-w-sm text-center font-body text-xs text-brand-muted">
+          Updates as you set the name, tags, and amp style. Knob positions reflect
+          tags (cosmetic).
+        </p>
+      </aside>
     </div>
   );
 }
