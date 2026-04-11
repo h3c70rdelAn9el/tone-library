@@ -4,7 +4,7 @@ import LibraryPage from './pages/LibraryPage';
 import FavoritesPage from './pages/FavoritesPage';
 import UploadPage from './pages/UploadPage';
 import ToneDetailPage from './pages/ToneDetailPage';
-import { SelectedToneProvider } from './hooks/useSelectedTone';
+import { SelectedToneProvider } from './context/SelectedToneProvider';
 
 export default function App() {
   return (

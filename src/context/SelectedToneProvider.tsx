@@ -1,21 +1,11 @@
 import {
-  createContext,
   useCallback,
-  useContext,
   useMemo,
   useReducer,
   type ReactNode,
 } from 'react';
 import type { Tone } from '../types/tone';
-
-type SelectedToneCtx = {
-  selectedTone: Tone | null;
-  previousTone: Tone | null;
-  selectTone: (tone: Tone) => void;
-  clearTone: () => void;
-};
-
-const Ctx = createContext<SelectedToneCtx | null>(null);
+import { SelectedToneContext } from './selectedToneContext';
 
 type State = { selected: Tone | null; previous: Tone | null };
 type Action =
@@ -61,13 +51,9 @@ export function SelectedToneProvider({ children }: { children: ReactNode }) {
     [selected, previous, selectTone, clearTone],
   );
 
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
-}
-
-export function useSelectedTone(): SelectedToneCtx {
-  const v = useContext(Ctx);
-  if (!v) {
-    throw new Error('useSelectedTone must be used within SelectedToneProvider');
-  }
-  return v;
+  return (
+    <SelectedToneContext.Provider value={value}>
+      {children}
+    </SelectedToneContext.Provider>
+  );
 }

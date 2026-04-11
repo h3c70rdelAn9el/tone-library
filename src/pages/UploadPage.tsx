@@ -1,12 +1,6 @@
-import {
-  useMemo,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type KeyboardEvent,
-} from 'react';
+import { useMemo, useState, type KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileAudio, Mic2, Upload, X } from 'lucide-react';
+import { FileAudio, Mic2 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { useToneStore } from '../store/useToneStore';
 import {
@@ -16,20 +10,20 @@ import {
 } from '../services/toneService';
 import { isSupabaseConfigured } from '../lib/supabase';
 import type { AmpStyle, Tone } from '../types/tone';
-import TagBadge from '../components/TagBadge';
-import AmpHead from '../components/AmpHead';
-import AmpCabinet from '../components/AmpCabinet';
-import { resolveAmpTheme } from '../lib/ampThemes';
+import {
+  buildUploadPreviewTone,
+  uniqueTagsFromTones,
+} from '../lib/toneForm';
+import { useFilePickState } from '../hooks/useFilePickState';
+import FileDropRow from '../components/FileDropRow';
+import AmpStyleSelect from '../components/AmpStyleSelect';
+import UploadTagField from '../components/UploadTagField';
+import UploadAmpPreviewPanel from '../components/UploadAmpPreviewPanel';
 
-function uniqueTagsFromTones(tones: Tone[]): string[] {
-  const set = new Set<string>();
-  for (const tone of tones) {
-    for (const tag of tone.tags) {
-      set.add(tag);
-    }
-  }
-  return Array.from(set).sort((a, b) => a.localeCompare(b));
-}
+/**
+ * Form state stays on this page. A global store is only worth it if you need a
+ * draft to survive route changes (e.g. leave Upload and return without losing fields).
+ */
 
 export default function UploadPage() {
   const navigate = useNavigate();
@@ -45,41 +39,33 @@ export default function UploadPage() {
   const [nameError, setNameError] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [uploading, setUploading] = useState(false);
-
-  const [namFile, setNamFile] = useState('');
-  const [irFile, setIrFile] = useState('');
-  const [namFileURL, setNamFileURL] = useState<string | null>(null);
-  const [irFileURL, setIrFileURL] = useState<string | null>(null);
-  const [namFileObj, setNamFileObj] = useState<File | null>(null);
-  const [irFileObj, setIrFileObj] = useState<File | null>(null);
   const [tagInput, setTagInput] = useState('');
 
-  const namInputRef = useRef<HTMLInputElement>(null);
-  const irInputRef = useRef<HTMLInputElement>(null);
+  const nam = useFilePickState();
+  const ir = useFilePickState();
 
   const availableTags = useMemo(() => uniqueTagsFromTones(tones), [tones]);
 
-  /** Live amp preview from current form fields (not persisted). */
   const previewTone = useMemo(
-    (): Tone => ({
-      id: 'upload-preview',
-      name: name.trim() || 'Your tone name',
-      tags: selectedTags,
-      notes: notes.trim(),
-      namFile: namFile || '',
-      irFile: irFile || '',
-      namFileURL: null,
-      irFileURL: null,
-      createdAt: new Date().toISOString().slice(0, 10),
+    () =>
+      buildUploadPreviewTone({
+        name,
+        tags: selectedTags,
+        notes,
+        namFile: nam.displayName,
+        irFile: ir.displayName,
+        favorite,
+        ampStyle,
+      }),
+    [
+      name,
+      selectedTags,
+      notes,
+      nam.displayName,
+      ir.displayName,
       favorite,
       ampStyle,
-    }),
-    [name, selectedTags, notes, namFile, irFile, favorite, ampStyle],
-  );
-
-  const previewTheme = useMemo(
-    () => resolveAmpTheme(previewTone),
-    [previewTone],
+    ],
   );
 
   const addTagString = (raw: string) => {
@@ -118,50 +104,6 @@ export default function UploadPage() {
     }
   };
 
-  const handleNamChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (namFileURL) URL.revokeObjectURL(namFileURL);
-    if (!file) {
-      setNamFile('');
-      setNamFileURL(null);
-      setNamFileObj(null);
-      return;
-    }
-    setNamFileObj(file);
-    setNamFile(file.name);
-    setNamFileURL(URL.createObjectURL(file));
-  };
-
-  const handleIrChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (irFileURL) URL.revokeObjectURL(irFileURL);
-    if (!file) {
-      setIrFile('');
-      setIrFileURL(null);
-      setIrFileObj(null);
-      return;
-    }
-    setIrFileObj(file);
-    setIrFile(file.name);
-    setIrFileURL(URL.createObjectURL(file));
-  };
-
-  const clearNamFile = () => {
-    if (namFileURL) URL.revokeObjectURL(namFileURL);
-    setNamFile('');
-    setNamFileURL(null);
-    setNamFileObj(null);
-    if (namInputRef.current) namInputRef.current.value = '';
-  };
-
-  const clearIrFile = () => {
-    if (irFileURL) URL.revokeObjectURL(irFileURL);
-    setIrFile('');
-    setIrFileURL(null);
-    setIrFileObj(null);
-    if (irInputRef.current) irInputRef.current.value = '';
-  };
-
   const handleSave = async () => {
     const trimmed = name.trim();
     if (!trimmed) {
@@ -177,15 +119,15 @@ export default function UploadPage() {
       let irPublic: string | null = null;
 
       if (isSupabaseConfigured()) {
-        if (namFileObj) {
-          namPublic = await uploadNamFile(namFileObj);
+        if (nam.file) {
+          namPublic = await uploadNamFile(nam.file);
           if (!namPublic) {
             setSubmitError('NAM file upload failed.');
             return;
           }
         }
-        if (irFileObj) {
-          irPublic = await uploadIrFile(irFileObj);
+        if (ir.file) {
+          irPublic = await uploadIrFile(ir.file);
           if (!irPublic) {
             setSubmitError('IR file upload failed.');
             return;
@@ -197,8 +139,8 @@ export default function UploadPage() {
         name: trimmed,
         tags: selectedTags,
         notes: notes.trim(),
-        namFile,
-        irFile,
+        namFile: nam.displayName,
+        irFile: ir.displayName,
         favorite,
         ampStyle,
       };
@@ -207,14 +149,14 @@ export default function UploadPage() {
         const localTone: Tone = {
           id: uuidv4(),
           ...baseFields,
-          namFileURL: namFileURL,
-          irFileURL: irFileURL,
+          namFileURL: nam.objectUrl,
+          irFileURL: ir.objectUrl,
           createdAt: new Date().toISOString().slice(0, 10),
         };
         addTone(localTone);
         setSyncStatus('local');
-        if (namFileURL) URL.revokeObjectURL(namFileURL);
-        if (irFileURL) URL.revokeObjectURL(irFileURL);
+        if (nam.objectUrl) URL.revokeObjectURL(nam.objectUrl);
+        if (ir.objectUrl) URL.revokeObjectURL(ir.objectUrl);
         navigate('/');
         return;
       }
@@ -227,8 +169,8 @@ export default function UploadPage() {
       if (created) {
         addTone(created);
         setSyncStatus('synced');
-        if (namFileURL) URL.revokeObjectURL(namFileURL);
-        if (irFileURL) URL.revokeObjectURL(irFileURL);
+        if (nam.objectUrl) URL.revokeObjectURL(nam.objectUrl);
+        if (ir.objectUrl) URL.revokeObjectURL(ir.objectUrl);
         navigate('/');
         return;
       }
@@ -236,14 +178,14 @@ export default function UploadPage() {
       const fallback: Tone = {
         id: uuidv4(),
         ...baseFields,
-        namFileURL: namPublic ?? namFileURL,
-        irFileURL: irPublic ?? irFileURL,
+        namFileURL: namPublic ?? nam.objectUrl,
+        irFileURL: irPublic ?? ir.objectUrl,
         createdAt: new Date().toISOString().slice(0, 10),
       };
       addTone(fallback);
       setSyncStatus('local');
-      if (namFileURL) URL.revokeObjectURL(namFileURL);
-      if (irFileURL) URL.revokeObjectURL(irFileURL);
+      if (nam.objectUrl) URL.revokeObjectURL(nam.objectUrl);
+      if (ir.objectUrl) URL.revokeObjectURL(ir.objectUrl);
       navigate('/');
     } catch (e) {
       console.error(e);
@@ -255,282 +197,139 @@ export default function UploadPage() {
 
   return (
     <div className="flex h-full min-h-0 flex-col lg:flex-row lg:overflow-hidden">
-      <div className="min-h-0 flex-1 overflow-y-auto p-8 lg:max-w-xl lg:shrink-0 lg:border-r lg:border-brand-border">
-      <div className="mb-8">
-        <h1 className="font-display text-4xl font-semibold tracking-tight text-brand-text mb-1">
-          Add Tone
-        </h1>
-        <p className="text-brand-subtext text-sm">Save a new tone to your library.</p>
-      </div>
-
-      <div className="flex flex-col gap-6">
-        {submitError ? (
-          <p className="text-sm text-red-400">{submitError}</p>
-        ) : null}
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-body font-semibold uppercase tracking-wide text-brand-subtext">
-            Tone Name *
-          </label>
-          <input
-            disabled={uploading}
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value);
-              if (nameError) setNameError('');
-            }}
-            placeholder="e.g. Metal Rhythm Tight"
-            className="bg-brand-card border border-brand-border rounded-xl px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted focus:outline-none focus:border-brand-accent/50 focus:ring-2 focus:ring-brand-accent/20 transition-colors disabled:opacity-50"
-          />
-          {nameError ? (
-            <p className="text-sm text-red-400">{nameError}</p>
-          ) : null}
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-body font-semibold uppercase tracking-wide text-brand-subtext">
-            Notes
-          </label>
-          <textarea
-            disabled={uploading}
-            rows={4}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Describe the tone, amp settings, use cases..."
-            className="bg-brand-card border border-brand-border rounded-xl px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted focus:outline-none focus:border-brand-accent/50 focus:ring-2 focus:ring-brand-accent/20 transition-colors resize-none disabled:opacity-50"
-          />
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <label className="text-xs font-body font-semibold uppercase tracking-wide text-brand-subtext">
-            Tags
-          </label>
-          {selectedTags.length > 0 ? (
-            <div className="flex flex-wrap gap-2 mb-1">
-              {selectedTags.map((tag) => (
-                <div
-                  key={tag}
-                  className="inline-flex items-center gap-1"
-                >
-                  <TagBadge tag={tag} />
-                  <button
-                    type="button"
-                    disabled={uploading}
-                    onClick={() => removeTag(tag)}
-                    className="rounded p-0.5 text-brand-muted hover:text-brand-text disabled:opacity-50"
-                    aria-label={`Remove ${tag}`}
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : null}
-          <input
-            type="text"
-            disabled={uploading}
-            value={tagInput}
-            onChange={(e) => handleTagInputChange(e.target.value)}
-            onKeyDown={handleTagInputKeyDown}
-            placeholder="Type a tag, press Enter or comma to add"
-            className="bg-brand-card border border-brand-border rounded-xl px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted focus:outline-none focus:border-brand-accent/50 focus:ring-2 focus:ring-brand-accent/20 transition-colors disabled:opacity-50"
-          />
-          <div className="flex flex-wrap gap-2">
-            {availableTags.map((tag) => (
-              <button
-                type="button"
-                key={tag}
-                disabled={uploading}
-                onClick={() => toggleTag(tag)}
-                className={`font-body text-sm font-medium px-4 py-2 rounded-full border capitalize transition-all duration-200 disabled:opacity-50 ${
-                  selectedTags.includes(tag)
-                    ? 'bg-brand-accent text-black border-brand-accent shadow-[0_0_20px_-4px_rgba(232,255,71,0.45)]'
-                    : 'bg-brand-card/60 text-brand-subtext border-brand-border hover:border-brand-accent/35 hover:text-brand-text'
-                }`}
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="amp-style-select"
-            className="text-xs font-body font-semibold uppercase tracking-wide text-brand-subtext"
-          >
-            Amp Style
-          </label>
-          <select
-            id="amp-style-select"
-            disabled={uploading}
-            value={ampStyle}
-            onChange={(e) => setAmpStyle(e.target.value as AmpStyle)}
-            className="bg-brand-card border border-brand-border rounded-xl px-4 py-2.5 text-sm text-brand-text focus:outline-none focus:border-brand-accent/50 focus:ring-2 focus:ring-brand-accent/20 transition-colors disabled:opacity-50"
-          >
-            <option value="modern-black">Modern / High Gain</option>
-            <option value="vintage-cream">Vintage / Clean</option>
-            <option value="british-gold">British / Classic</option>
-            <option value="custom-dark">Custom / Dark</option>
-          </select>
-          <p className="text-[11px] text-brand-muted">
-            Cosmetic look for the amp display. Optional — defaults to Modern.
+      <div className="min-h-0 flex-1 overflow-y-auto border-brand-border p-8 lg:max-w-xl lg:shrink-0 lg:border-r">
+        <div className="mb-8">
+          <h1 className="mb-1 font-display text-4xl font-semibold tracking-tight text-brand-text">
+            Add Tone
+          </h1>
+          <p className="text-sm text-brand-subtext">
+            Save a new tone to your library.
           </p>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-body font-semibold uppercase tracking-wide text-brand-subtext">
-            Favorite
-          </label>
-          <button
-            type="button"
-            disabled={uploading}
-            onClick={() => setFavorite((f) => !f)}
-            className={`font-body text-sm font-medium px-4 py-2 rounded-full border w-fit transition-all duration-200 disabled:opacity-50 ${
-              favorite
-                ? 'bg-brand-accent text-black border-brand-accent shadow-[0_0_20px_-4px_rgba(232,255,71,0.45)]'
-                : 'bg-brand-card/60 text-brand-subtext border-brand-border hover:border-brand-accent/35 hover:text-brand-text'
-            }`}
-          >
-            {favorite ? 'Favorited' : 'Not favorited'}
-          </button>
-        </div>
+        <div className="flex flex-col gap-6">
+          {submitError ? (
+            <p className="text-sm text-red-400">{submitError}</p>
+          ) : null}
 
-        <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="nam-file-input"
-            className="text-xs font-body font-semibold uppercase tracking-wide text-brand-subtext"
-          >
-            NAM file
-          </label>
-          <input
-            ref={namInputRef}
-            id="nam-file-input"
-            type="file"
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-body font-semibold uppercase tracking-wide text-brand-subtext">
+              Tone Name *
+            </label>
+            <input
+              disabled={uploading}
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (nameError) setNameError('');
+              }}
+              placeholder="e.g. Metal Rhythm Tight"
+              className="rounded-xl border border-brand-border bg-brand-card px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted transition-colors focus:border-brand-accent/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 disabled:opacity-50"
+            />
+            {nameError ? (
+              <p className="text-sm text-red-400">{nameError}</p>
+            ) : null}
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-body font-semibold uppercase tracking-wide text-brand-subtext">
+              Notes
+            </label>
+            <textarea
+              disabled={uploading}
+              rows={4}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Describe the tone, amp settings, use cases..."
+              className="resize-none rounded-xl border border-brand-border bg-brand-card px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted transition-colors focus:border-brand-accent/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 disabled:opacity-50"
+            />
+          </div>
+
+          <UploadTagField
+            selectedTags={selectedTags}
+            tagInput={tagInput}
+            availableTags={availableTags}
+            disabled={uploading}
+            onTagInputChange={handleTagInputChange}
+            onTagInputKeyDown={handleTagInputKeyDown}
+            onRemoveTag={removeTag}
+            onToggleSuggestedTag={toggleTag}
+          />
+
+          <AmpStyleSelect
+            value={ampStyle}
+            disabled={uploading}
+            onChange={setAmpStyle}
+          />
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-body font-semibold uppercase tracking-wide text-brand-subtext">
+              Favorite
+            </label>
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={() => setFavorite((f) => !f)}
+              className={`w-fit rounded-full border px-4 py-2 font-body text-sm font-medium transition-all duration-200 disabled:opacity-50 ${
+                favorite
+                  ? 'border-brand-accent bg-brand-accent text-black shadow-[0_0_20px_-4px_rgba(232,255,71,0.45)]'
+                  : 'border-brand-border bg-brand-card/60 text-brand-subtext hover:border-brand-accent/35 hover:text-brand-text'
+              }`}
+            >
+              {favorite ? 'Favorited' : 'Not favorited'}
+            </button>
+          </div>
+
+          <FileDropRow
+            inputId="nam-file-input"
+            sectionLabel="NAM file"
             accept=".nam"
-            className="sr-only"
+            Icon={FileAudio}
+            emptyCta="Choose .nam file"
+            displayName={nam.displayName}
             disabled={uploading}
-            onChange={handleNamChange}
+            inputRef={nam.inputRef}
+            onInputChange={nam.onInputChange}
+            onClear={nam.clear}
+            clearAriaLabel="Remove NAM file"
           />
-          {namFile ? (
-            <div className="flex items-center justify-between gap-3 rounded-2xl border border-brand-border bg-brand-card px-4 py-3">
-              <div className="flex min-w-0 flex-1 items-center gap-3">
-                <FileAudio
-                  size={18}
-                  className="shrink-0 text-brand-accent"
-                  aria-hidden
-                />
-                <span className="truncate font-mono text-sm text-brand-text">
-                  {namFile}
-                </span>
-              </div>
-              <button
-                type="button"
-                disabled={uploading}
-                onClick={clearNamFile}
-                className="shrink-0 rounded-lg p-1.5 text-brand-muted transition-colors hover:bg-brand-border/50 hover:text-brand-text disabled:opacity-50"
-                aria-label="Remove NAM file"
-              >
-                <X size={18} />
-              </button>
-            </div>
-          ) : (
-            <label
-              htmlFor="nam-file-input"
-              className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-brand-border py-8 text-sm text-brand-muted transition-colors hover:border-brand-accent/40 ${uploading ? 'pointer-events-none opacity-50' : ''}`}
-            >
-              <Upload size={16} />
-              Choose .nam file
-            </label>
-          )}
-        </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="ir-file-input"
-            className="text-xs font-body font-semibold uppercase tracking-wide text-brand-subtext"
-          >
-            IR file
-          </label>
-          <input
-            ref={irInputRef}
-            id="ir-file-input"
-            type="file"
+          <FileDropRow
+            inputId="ir-file-input"
+            sectionLabel="IR file"
             accept=".wav"
-            className="sr-only"
+            Icon={Mic2}
+            emptyCta="Choose .wav file"
+            displayName={ir.displayName}
             disabled={uploading}
-            onChange={handleIrChange}
+            inputRef={ir.inputRef}
+            onInputChange={ir.onInputChange}
+            onClear={ir.clear}
+            clearAriaLabel="Remove IR file"
           />
-          {irFile ? (
-            <div className="flex items-center justify-between gap-3 rounded-2xl border border-brand-border bg-brand-card px-4 py-3">
-              <div className="flex min-w-0 flex-1 items-center gap-3">
-                <Mic2
-                  size={18}
-                  className="shrink-0 text-brand-accent"
-                  aria-hidden
-                />
-                <span className="truncate font-mono text-sm text-brand-text">
-                  {irFile}
-                </span>
-              </div>
-              <button
-                type="button"
-                disabled={uploading}
-                onClick={clearIrFile}
-                className="shrink-0 rounded-lg p-1.5 text-brand-muted transition-colors hover:bg-brand-border/50 hover:text-brand-text disabled:opacity-50"
-                aria-label="Remove IR file"
-              >
-                <X size={18} />
-              </button>
-            </div>
-          ) : (
-            <label
-              htmlFor="ir-file-input"
-              className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-brand-border py-8 text-sm text-brand-muted transition-colors hover:border-brand-accent/40 ${uploading ? 'pointer-events-none opacity-50' : ''}`}
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={() => void handleSave()}
+              className="rounded-full bg-brand-accent px-6 py-2.5 font-display text-sm font-semibold text-black shadow-[0_0_24px_-6px_rgba(232,255,71,0.5)] transition-colors hover:bg-brand-accentDim disabled:opacity-50"
             >
-              <Upload size={16} />
-              Choose .wav file
-            </label>
-          )}
-        </div>
-
-        <div className="flex gap-3 pt-2">
-          <button
-            type="button"
-            disabled={uploading}
-            onClick={() => void handleSave()}
-            className="bg-brand-accent text-black font-display font-semibold text-sm px-6 py-2.5 rounded-full hover:bg-brand-accentDim shadow-[0_0_24px_-6px_rgba(232,255,71,0.5)] transition-colors disabled:opacity-50"
-          >
-            {uploading ? 'Uploading...' : 'Save Tone'}
-          </button>
-          <button
-            type="button"
-            disabled={uploading}
-            onClick={() => navigate('/')}
-            className="text-brand-subtext text-sm px-4 py-2.5 rounded-full hover:text-brand-text transition-colors disabled:opacity-50"
-          >
-            Cancel
-          </button>
+              {uploading ? 'Uploading...' : 'Save Tone'}
+            </button>
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={() => navigate('/')}
+              className="rounded-full px-4 py-2.5 text-sm text-brand-subtext transition-colors hover:text-brand-text disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       </div>
-      </div>
 
-      <aside
-        className="flex min-h-[280px] shrink-0 flex-col items-center justify-center gap-2 border-t border-brand-border bg-brand-card/20 px-4 py-10 lg:min-h-0 lg:flex-1 lg:border-l lg:border-t-0 lg:overflow-y-auto lg:px-6 lg:py-12"
-        aria-label="Amp preview"
-      >
-        <p className="mb-2 font-body text-[11px] font-semibold uppercase tracking-wider text-brand-muted">
-          Library preview
-        </p>
-        <div className="w-full max-w-md">
-          <AmpHead tone={previewTone} theme={previewTheme} />
-          <AmpCabinet theme={previewTheme} />
-        </div>
-        <p className="mt-2 max-w-sm text-center font-body text-xs text-brand-muted">
-          Updates as you set the name, tags, and amp style. Knob positions reflect
-          tags (cosmetic).
-        </p>
-      </aside>
+      <UploadAmpPreviewPanel previewTone={previewTone} />
     </div>
   );
 }
