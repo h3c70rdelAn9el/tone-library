@@ -2,7 +2,7 @@ import supabase, { isSupabaseConfigured } from '../lib/supabase';
 import { mockTones } from '../data/mockTones';
 
 // Toggle this flag to switch between mock data and Supabase
-export const USE_MOCK_DATA = true;
+export const USE_MOCK_DATA = false;
 import type { AmpStyle, Tone } from '../types/tone';
 
 function parseAmpStyle(raw: string | null | undefined): AmpStyle | null {
