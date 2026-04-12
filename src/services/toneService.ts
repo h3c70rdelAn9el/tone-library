@@ -1,13 +1,18 @@
 import supabase, { isSupabaseConfigured } from '../lib/supabase';
 import { mockTones } from '../data/mockTones';
-
-// Toggle this flag to switch between mock data and Supabase
-export const USE_MOCK_DATA = false;
 import type { AmpStyle, Tone } from '../types/tone';
+
+/** Dev-only: force mock in service layer (guest mode uses useTones + store instead). */
+export const USE_MOCK_DATA = false;
 
 function parseAmpStyle(raw: string | null | undefined): AmpStyle | null {
   if (raw == null || raw === '') return null;
-  const allowed: AmpStyle[] = ['modern-black', 'vintage-cream', 'british-gold', 'custom-dark'];
+  const allowed: AmpStyle[] = [
+    'modern-black',
+    'vintage-cream',
+    'british-gold',
+    'custom-dark',
+  ];
   return (allowed as string[]).includes(raw) ? (raw as AmpStyle) : null;
 }
 
@@ -22,12 +27,14 @@ type DbToneRow = {
   ir_file_url: string | null;
   favorite: boolean | null;
   amp_style?: string | null;
+  user_id?: string | null;
   created_at: string;
 };
 
 function rowToTone(row: DbToneRow): Tone {
   const created = row.created_at;
-  const dateOnly = created.length >= 10 ? created.slice(0, 10) : (created.split('T')[0] ?? created);
+  const dateOnly =
+    created.length >= 10 ? created.slice(0, 10) : created.split('T')[0] ?? created;
   return {
     id: row.id,
     name: row.name,
@@ -84,7 +91,8 @@ export function filterTonesLocally(
       return false;
     }
     if (q) {
-      const hay = `${tone.name} ${tone.notes} ${tone.tags.join(' ')}`.toLowerCase();
+      const hay =
+        `${tone.name} ${tone.notes} ${tone.tags.join(' ')}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -160,7 +168,10 @@ export async function fetchAllTags(): Promise<string[]> {
   return Array.from(set).sort((a, b) => a.localeCompare(b));
 }
 
-export async function createTone(tone: Omit<Tone, 'id' | 'createdAt'>): Promise<Tone | null> {
+export async function createTone(
+  tone: Omit<Tone, 'id' | 'createdAt'>,
+  userId: string,
+): Promise<Tone | null> {
   if (!isSupabaseConfigured()) {
     console.error('Supabase env vars are not configured.');
     return null;
@@ -176,6 +187,7 @@ export async function createTone(tone: Omit<Tone, 'id' | 'createdAt'>): Promise<
     ir_file_url: tone.irFileURL,
     favorite: tone.favorite,
     amp_style: tone.ampStyle ?? 'modern-black',
+    user_id: userId,
   };
 
   const { data, error } = await supabase.from('tones').insert(insert).select().single();
@@ -210,7 +222,10 @@ export async function toggleFavorite(id: string, current: boolean): Promise<bool
     return false;
   }
 
-  const { error } = await supabase.from('tones').update({ favorite: !current }).eq('id', id);
+  const { error } = await supabase
+    .from('tones')
+    .update({ favorite: !current })
+    .eq('id', id);
 
   if (error) {
     console.error(error);
@@ -220,13 +235,16 @@ export async function toggleFavorite(id: string, current: boolean): Promise<bool
   return true;
 }
 
-export async function uploadNamFile(file: File): Promise<string | null> {
+export async function uploadNamFile(
+  file: File,
+  userId: string,
+): Promise<string | null> {
   if (!isSupabaseConfigured()) {
     console.error('Supabase env vars are not configured.');
     return null;
   }
 
-  const path = `${Date.now()}-${file.name}`;
+  const path = `${userId}/${Date.now()}-${file.name}`;
   const { data, error } = await supabase.storage.from('nam-files').upload(path, file);
 
   if (error) {
@@ -238,13 +256,16 @@ export async function uploadNamFile(file: File): Promise<string | null> {
   return pub.publicUrl;
 }
 
-export async function uploadIrFile(file: File): Promise<string | null> {
+export async function uploadIrFile(
+  file: File,
+  userId: string,
+): Promise<string | null> {
   if (!isSupabaseConfigured()) {
     console.error('Supabase env vars are not configured.');
     return null;
   }
 
-  const path = `${Date.now()}-${file.name}`;
+  const path = `${userId}/${Date.now()}-${file.name}`;
   const { data, error } = await supabase.storage.from('ir-files').upload(path, file);
 
   if (error) {

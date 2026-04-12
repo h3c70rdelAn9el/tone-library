@@ -3,16 +3,18 @@ import { persist } from 'zustand/middleware';
 import { mockTones } from '../data/mockTones';
 import type { Tone } from '../types/tone';
 
-export type SyncStatus = 'synced' | 'local' | 'error';
+export type SyncStatus = 'synced' | 'local' | 'error' | 'guest';
 
 type ToneStore = {
   tones: Tone[];
   syncStatus: SyncStatus;
+  isGuest: boolean;
   searchQuery: string;
   activeTags: string[];
   favoritesOnly: boolean;
   setTones: (tones: Tone[]) => void;
   setSyncStatus: (status: SyncStatus) => void;
+  setGuest: (isGuest: boolean) => void;
   setSearchQuery: (q: string) => void;
   setActiveTags: (tags: string[]) => void;
   toggleActiveTag: (tag: string) => void;
@@ -22,6 +24,7 @@ type ToneStore = {
   deleteTone: (id: string) => void;
   toggleFavorite: (id: string) => void;
   getToneById: (id: string) => Tone | undefined;
+  clearStore: () => void;
 };
 
 function seedTones(): Tone[] {
@@ -32,12 +35,14 @@ export const useToneStore = create<ToneStore>()(
   persist(
     (set, get) => ({
       tones: seedTones(),
-      syncStatus: 'local' as SyncStatus,
+      syncStatus: 'guest' as SyncStatus,
+      isGuest: true,
       searchQuery: '',
       activeTags: [] as string[],
       favoritesOnly: false,
       setTones: (tones) => set({ tones }),
       setSyncStatus: (syncStatus) => set({ syncStatus }),
+      setGuest: (isGuest) => set({ isGuest }),
       setSearchQuery: (searchQuery) => set({ searchQuery }),
       setActiveTags: (activeTags) => set({ activeTags }),
       toggleActiveTag: (tag) =>
@@ -68,6 +73,21 @@ export const useToneStore = create<ToneStore>()(
           ),
         })),
       getToneById: (id) => get().tones.find((t) => t.id === id),
+      clearStore: () => {
+        try {
+          useToneStore.persist.clearStorage();
+        } catch {
+          /* ignore */
+        }
+        set({
+          tones: seedTones(),
+          syncStatus: 'guest',
+          isGuest: true,
+          searchQuery: '',
+          activeTags: [],
+          favoritesOnly: false,
+        });
+      },
     }),
     {
       name: 'tone-library',
@@ -82,7 +102,7 @@ export const useToneStore = create<ToneStore>()(
         } | null;
         const raw = p?.tones;
         if (!raw || !Array.isArray(raw)) {
-          return currentState;
+          return { ...currentState, isGuest: currentState.isGuest };
         }
         return {
           ...currentState,
@@ -92,6 +112,7 @@ export const useToneStore = create<ToneStore>()(
             irFileURL: t.irFileURL ?? null,
           })),
           syncStatus: p?.syncStatus ?? currentState.syncStatus,
+          isGuest: currentState.isGuest,
         };
       },
     },
