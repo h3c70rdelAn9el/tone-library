@@ -1,8 +1,11 @@
-# 🎸 Tone Library — Phase 6 Complete
+# 🎸 ToneForge — Phase 6 Complete
+
 ## Google Auth + Guest Mode
 
 ## Goal
+
 Two things in one phase:
+
 1. Real Google OAuth via Supabase Auth — users sign in, get their own private library
 2. Guest mode — unauthenticated users see the full app with mock data, a floating "Sign in with Google" button nudges them to sign up
 
@@ -11,6 +14,7 @@ Two things in one phase:
 ## Manual Steps (do these BEFORE running Cursor)
 
 ### 1. Google OAuth Setup
+
 1. Go to https://console.cloud.google.com
 2. Create a new project or use existing
 3. Go to APIs & Services → Credentials
@@ -23,12 +27,14 @@ Two things in one phase:
 7. Copy Client ID and Client Secret
 
 ### 2. Enable Google in Supabase
+
 1. Go to Supabase → Authentication → Providers
 2. Enable Google
 3. Paste Client ID and Client Secret
 4. Save
 
 ### 3. Supabase URL Configuration
+
 1. Go to Supabase → Authentication → URL Configuration
 2. Site URL: `https://your-vercel-app.vercel.app`
 3. Redirect URLs — add all of these:
@@ -90,6 +96,7 @@ create policy "Users can delete own ir files"
 ```
 
 ### 5. Add to .env
+
 ```
 VITE_SUPABASE_URL=your_url
 VITE_SUPABASE_ANON_KEY=your_anon_key
@@ -136,6 +143,7 @@ src/
 ## `src/context/AuthContext.tsx`
 
 Create React context that:
+
 - On mount: calls `supabase.auth.getSession()` to restore existing session
 - Listens to `supabase.auth.onAuthStateChange()` for login/logout events
 - Stores `session`, `user` in state
@@ -169,12 +177,14 @@ Floating element, fixed position top-right. Does not affect page layout.
 Position: `fixed top-4 right-4 z-50`
 
 ### Guest state (no user):
+
 - Pill button: Google SVG icon + "Sign in with Google"
 - Style: `bg-brand-accent text-black font-display uppercase text-xs tracking-widest px-4 py-2 rounded-full`
 - Pulsing ring animation: `box-shadow` keyframe at 2s infinite, accent color low opacity
 - On click: call `signInWithGoogle()` from useAuth()
 
 ### Signed in state:
+
 - User avatar: circular 32px image from `user.user_metadata.avatar_url`
 - Fallback avatar: circle with first letter of name, `bg-brand-accent text-black`
 - First name text next to avatar
@@ -188,6 +198,7 @@ Position: `fixed top-4 right-4 z-50`
 Used inside TopBar signed-in state. Props: `user: User`
 
 Shows:
+
 - Avatar (with fallback)
 - First name (parsed from `user.user_metadata.full_name`)
 - LogOut button
@@ -207,6 +218,7 @@ Shows:
 ## Updated: `src/store/useToneStore.ts`
 
 Add:
+
 - `isGuest: boolean` — true when no user
 - `syncStatus`: add `'guest'` as valid value
 - `clearStore()` action — resets tones array, clears localStorage persistence
@@ -217,12 +229,15 @@ Add:
 ## Updated: `src/services/toneService.ts`
 
 ### `createTone(tone, userId: string)`
+
 - Add `user_id: userId` to insert payload
 
 ### `uploadNamFile(file: File, userId: string)`
+
 - File path: `${userId}/${Date.now()}-${file.name}`
 
 ### `uploadIrFile(file: File, userId: string)`
+
 - File path: `${userId}/${Date.now()}-${file.name}`
 
 All other functions unchanged — RLS handles scoping automatically.
@@ -240,6 +255,7 @@ All other functions unchanged — RLS handles scoping automatically.
 ## Updated: `src/pages/UploadPage.tsx`
 
 If guest:
+
 - Render full form UI but all inputs are `disabled`
 - Banner at top: `bg-brand-accent/10 border border-brand-accent/30 rounded-md p-4`
   - Text: "Sign in with Google to save your tones"
@@ -247,6 +263,7 @@ If guest:
 - Save button: disabled, label "Sign in to save"
 
 If authed:
+
 - Pass `user.id` to `createTone()` and file upload functions
 - Works exactly as Phase 3
 
@@ -255,12 +272,14 @@ If authed:
 ## Updated: `src/pages/ToneDetailPage.tsx`
 
 If guest:
+
 - Show full tone detail (read from mockTones)
 - Hide Edit, Delete, Favorite action buttons
 - Show: "Sign in to manage your tones" in muted text below tone info
 - Download buttons show "Sign in to download"
 
 If authed:
+
 - All buttons and actions work normally
 
 ---
@@ -271,12 +290,12 @@ If authed:
 - Auth is handled by TopBar only
 - Sidebar footer sync status indicator:
 
-| Status | Dot | Label |
-|---|---|---|
-| `'synced'` | green-400 | Synced |
-| `'local'` | amber-400 | Local only |
-| `'error'` | red-400 | Offline |
-| `'guest'` | brand-muted | Guest mode |
+| Status     | Dot         | Label      |
+| ---------- | ----------- | ---------- |
+| `'synced'` | green-400   | Synced     |
+| `'local'`  | amber-400   | Local only |
+| `'error'`  | red-400     | Offline    |
+| `'guest'`  | brand-muted | Guest mode |
 
 ---
 
@@ -327,7 +346,9 @@ User lands on app
 ---
 
 ## Vercel Environment Variables
+
 Make sure these are set in Vercel dashboard:
+
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 - `VITE_SITE_URL` (set to your Vercel URL)

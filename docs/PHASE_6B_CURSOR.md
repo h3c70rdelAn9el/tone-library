@@ -1,12 +1,15 @@
-# 🎸 Tone Library — Phase 6b Cursor Instructions
+# 🎸 ToneForge — Phase 6b Cursor Instructions
+
 ## Guest Mode + Sign In Button
 
 ## Goal
+
 Unauthenticated users land on the full app loaded with mock tone data. They can browse, explore the amp UI, and see how everything works. A small "Sign in with Google" button floats in the top-right corner. Once signed in, mock data disappears and their real personal library loads. No separate login page needed.
 
 ---
 
 ## No New Dependencies
+
 Everything is already installed.
 
 ---
@@ -93,6 +96,7 @@ Delete LoginPage route entirely — there is no standalone login page anymore.
 Thin bar that sits at the top-right of the main content area. Not a full-width header — just a floating element pinned top-right.
 
 ### Guest state:
+
 - Button: "Sign in with Google"
 - Style: small, pill-shaped, `bg-brand-accent text-black font-display uppercase text-xs tracking-widest`
 - Google icon inline (simple SVG G logo) to the left of text
@@ -100,12 +104,14 @@ Thin bar that sits at the top-right of the main content area. Not a full-width h
 - Subtle pulsing ring animation around the button to draw attention
 
 ### Signed in state:
+
 - Show user avatar (circular, 32px)
 - Show first name next to avatar
 - Small LogOut icon button next to name
 - On logout: `supabase.auth.signOut()` then reload tones with mock data
 
 ### Positioning:
+
 - `fixed top-4 right-4 z-50` so it floats above all content
 - Does not affect layout of anything below it
 
@@ -122,12 +128,13 @@ Thin bar that sits at the top-right of the main content area. Not a full-width h
 ## Updated: `src/pages/UploadPage.tsx`
 
 If guest (`isGuest === true`):
+
 - Render the full form UI so they can see it
 - All inputs are disabled (`disabled` prop)
 - Show a banner at top of form:
   - Text: "Sign in with Google to save your tones"
   - Button: "Sign in" — same style as TopBar button
-  - Background: subtle `bg-brand-accent/10 border border-brand-accent/30` 
+  - Background: subtle `bg-brand-accent/10 border border-brand-accent/30`
 - Save button: disabled, shows "Sign in to save" instead of "Save Tone"
 
 If signed in: form works normally as before.
@@ -137,6 +144,7 @@ If signed in: form works normally as before.
 ## Updated: `src/pages/ToneDetailPage.tsx`
 
 If guest:
+
 - Show tone detail normally (read-only view of mock tone)
 - Hide Edit, Delete, Favorite buttons
 - Show small text below: "Sign in to manage your tones"
@@ -156,12 +164,12 @@ If signed in: all buttons work normally.
 
 ## Sync Status Values (update Sidebar indicator)
 
-| Status | Dot color | Label |
-|---|---|---|
-| `'synced'` | green-400 | Synced |
-| `'local'` | amber-400 | Local only |
-| `'error'` | red-400 | Offline |
-| `'guest'` | brand-muted | Guest mode |
+| Status     | Dot color   | Label      |
+| ---------- | ----------- | ---------- |
+| `'synced'` | green-400   | Synced     |
+| `'local'`  | amber-400   | Local only |
+| `'error'`  | red-400     | Offline    |
+| `'guest'`  | brand-muted | Guest mode |
 
 ---
 
@@ -194,6 +202,7 @@ User lands on app
 ---
 
 ## Design Rules
+
 - TopBar button should feel like a gentle nudge, not an aggressive CTA
 - The pulsing ring: subtle, slow (2s animation), accent color at low opacity
 - Guest mode never feels broken — the app looks fully functional

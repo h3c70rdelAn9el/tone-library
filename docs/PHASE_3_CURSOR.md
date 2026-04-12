@@ -1,6 +1,7 @@
-# 🎸 Tone Library — Phase 3 Cursor Instructions
+# 🎸 ToneForge — Phase 3 Cursor Instructions
 
 ## Goal
+
 Connect the app to Supabase for real persistent storage. Tone metadata goes into Postgres. NAM and IR files go into Supabase Storage buckets. Zustand stays as a local cache and fallback layer. No auth yet — all data is public/anonymous for now.
 
 ---
@@ -8,7 +9,7 @@ Connect the app to Supabase for real persistent storage. Tone metadata goes into
 ## Step 1 — Create Supabase Project (do this manually before running Cursor)
 
 1. Go to https://supabase.com and create a new project
-2. Name it `tone-library`
+2. Name it `ToneForge`
 3. Choose a region close to you
 4. Save your database password somewhere safe
 5. Once created, go to **Project Settings → API**
@@ -108,31 +109,37 @@ src/
 All direct Supabase calls live here. No UI logic.
 
 ### `fetchAllTones(): Promise<Tone[]>`
+
 - Query the `tones` table, order by `created_at` descending
 - Map snake_case DB columns back to camelCase Tone type
 - On error: log error and return empty array
 
 ### `createTone(tone: Omit<Tone, 'id' | 'createdAt'>): Promise<Tone | null>`
+
 - Insert into `tones` table
 - Map camelCase fields to snake_case for DB
 - Return the created tone with id and created_at from DB
 - On error: log and return null
 
 ### `deleteTone(id: string): Promise<boolean>`
+
 - Delete from `tones` where id matches
 - Return true on success, false on error
 
 ### `toggleFavorite(id: string, current: boolean): Promise<boolean>`
+
 - Update `favorite` to `!current` where id matches
 - Return true on success, false on error
 
 ### `uploadNamFile(file: File): Promise<string | null>`
+
 - Upload to `nam-files` bucket
 - Filename: `${Date.now()}-${file.name}` to avoid collisions
 - Return the public URL from Supabase Storage
 - On error: log and return null
 
 ### `uploadIrFile(file: File): Promise<string | null>`
+
 - Same as above but targets `ir-files` bucket
 
 ---
@@ -142,11 +149,13 @@ All direct Supabase calls live here. No UI logic.
 Custom hook managing fetch lifecycle.
 
 State:
+
 - `tones`: Tone[] — starts from Zustand store immediately as cache
 - `loading`: boolean
 - `error`: string | null
 
 On mount:
+
 - Set loading true
 - Call `fetchAllTones()` from toneService
 - If successful: update local state and Zustand store, set `syncStatus` to `'synced'`
@@ -195,6 +204,7 @@ Skeleton loader shown while fetching.
 ## Updated: `UploadPage.tsx`
 
 On save (in this order):
+
 1. Show "Uploading..." state, disable save button
 2. Upload NAM file via `uploadNamFile()` → get public URL
 3. Upload IR file via `uploadIrFile()` → get public URL
@@ -210,17 +220,20 @@ On save (in this order):
 Read tone from Zustand store by id (already cached).
 
 Delete:
+
 - `window.confirm` first
 - Call `deleteTone(id)` from toneService
 - On success: remove from Zustand store, navigate to `/`
 - On failure: show inline error, stay on page
 
 Favorite toggle:
+
 - Call `toggleFavorite(id, tone.favorite)` from toneService
 - On success: update Zustand store
 - On failure: show brief inline error
 
 File downloads:
+
 - If URL is a Supabase public URL: open in new tab or trigger anchor download
 - If URL is a local blob (Phase 2 legacy): use blob download logic
 
@@ -248,6 +261,7 @@ Read from `useToneStore().syncStatus`. All text in font-mono muted style.
 ---
 
 ## Design Rules (carry over from Phase 1 + 2)
+
 - Only new colors: green-400 (synced), amber-400 (local), red-400 (offline) for sync dot indicators
 - Skeleton cards must match ToneCard dimensions exactly — no layout shift on load
 - No new fonts or spacing systems introduced
