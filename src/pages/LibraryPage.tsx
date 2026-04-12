@@ -11,6 +11,8 @@ import FilterPills from '../components/FilterPills';
 import AmpDisplay from '../components/AmpDisplay';
 import { X } from 'lucide-react';
 
+const DEMO_TONE_COUNT = 6;
+
 export default function LibraryPage() {
   // For mobile accordion
   const [mobileSection, setMobileSection] = useState<'amp' | 'tones'>('tones');
@@ -19,6 +21,7 @@ export default function LibraryPage() {
   const setSearchQuery = useToneStore((s) => s.setSearchQuery);
   const totalTones = useToneStore((s) => s.tones.length);
   const syncStatus = useToneStore((s) => s.syncStatus);
+  const isGuest = useToneStore((s) => s.isGuest);
 
   const { selectedTone, selectTone } = useSelectedTone();
 
@@ -35,6 +38,11 @@ export default function LibraryPage() {
   const showFallbackBanner = (syncStatus === 'error' || error) && !bannerDismissed;
 
   const subheading = useMemo(() => {
+    if (isGuest) {
+      if (loading) return `${DEMO_TONE_COUNT} demo tones`;
+      if (hasFilters) return `${tones.length} of ${DEMO_TONE_COUNT} demo tones`;
+      return `${DEMO_TONE_COUNT} demo tones`;
+    }
     if (loading) {
       return `${totalTones} tones saved`;
     }
@@ -42,7 +50,7 @@ export default function LibraryPage() {
       return `${tones.length} of ${totalTones} tones`;
     }
     return `${totalTones} tones saved`;
-  }, [loading, hasFilters, totalTones, tones.length]);
+  }, [loading, hasFilters, totalTones, tones.length, isGuest]);
 
   useEffect(() => {
     if (loading || tones.length === 0) return;

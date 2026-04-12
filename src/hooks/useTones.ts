@@ -5,6 +5,8 @@ import {
   filterTonesLocally,
 } from '../services/toneService';
 import { useToneStore } from '../store/useToneStore';
+import { useAuth } from '../context/AuthContext';
+import { mockTones } from '../data/mockTones';
 import type { Tone } from '../types/tone';
 
 export type UseTonesParams = {
@@ -15,9 +17,15 @@ export type UseTonesParams = {
 
 const EMPTY_TAGS: string[] = [];
 
+function cloneMockTones(): Tone[] {
+  return mockTones.map((t) => ({ ...t }));
+}
+
 export function useTones(params?: UseTonesParams) {
+  const { user, loading: authLoading } = useAuth();
   const setTones = useToneStore((s) => s.setTones);
   const setSyncStatus = useToneStore((s) => s.setSyncStatus);
+  const setGuest = useToneStore((s) => s.setGuest);
 
   const query = params?.query?.trim() ?? '';
   const tags = params?.tags ?? EMPTY_TAGS;
@@ -31,8 +39,24 @@ export function useTones(params?: UseTonesParams) {
     setLoading(true);
     setError(null);
 
-    const hasParams =
-      query.length > 0 || tags.length > 0 || favoritesOnly;
+    if (!user) {
+      const mock = cloneMockTones();
+      setTones(mock);
+      setGuest(true);
+      setSyncStatus('guest');
+      const hasParams = query.length > 0 || tags.length > 0 || favoritesOnly;
+      if (!hasParams) {
+        setDisplayTones(mock);
+      } else {
+        setDisplayTones(filterTonesLocally(mock, query, tags, favoritesOnly));
+      }
+      setLoading(false);
+      return;
+    }
+
+    setGuest(false);
+
+    const hasParams = query.length > 0 || tags.length > 0 || favoritesOnly;
 
     if (!hasParams) {
       const remote = await tryFetchAllTones();
@@ -68,18 +92,19 @@ export function useTones(params?: UseTonesParams) {
       );
     }
     setLoading(false);
-  }, [query, tags, favoritesOnly, setTones, setSyncStatus]);
+  }, [user, query, tags, favoritesOnly, setTones, setSyncStatus, setGuest]);
 
   useEffect(() => {
+    if (authLoading) return;
     const t = window.setTimeout(() => {
       void runFetch();
     }, 0);
     return () => window.clearTimeout(t);
-  }, [runFetch]);
+  }, [runFetch, authLoading]);
 
   return {
     tones: displayTones,
-    loading,
+    loading: loading || authLoading,
     error,
     refetch: runFetch,
   };

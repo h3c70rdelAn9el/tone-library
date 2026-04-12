@@ -19,17 +19,16 @@ import FileDropRow from '../components/FileDropRow';
 import AmpStyleSelect from '../components/AmpStyleSelect';
 import UploadTagField from '../components/UploadTagField';
 import UploadAmpPreviewPanel from '../components/UploadAmpPreviewPanel';
-
-/**
- * Form state stays on this page. A global store is only worth it if you need a
- * draft to survive route changes (e.g. leave Upload and return without losing fields).
- */
+import { useAuth } from '../context/AuthContext';
 
 export default function UploadPage() {
   const navigate = useNavigate();
+  const { user, loading: authLoading, signInWithGoogle } = useAuth();
   const tones = useToneStore((s) => s.tones);
   const addTone = useToneStore((s) => s.addTone);
   const setSyncStatus = useToneStore((s) => s.setSyncStatus);
+
+  const guestMode = !authLoading && !user;
 
   const [name, setName] = useState('');
   const [notes, setNotes] = useState('');
@@ -43,6 +42,8 @@ export default function UploadPage() {
 
   const nam = useFilePickState();
   const ir = useFilePickState();
+
+  const formDisabled = uploading || guestMode;
 
   const availableTags = useMemo(() => uniqueTagsFromTones(tones), [tones]);
 
@@ -105,6 +106,7 @@ export default function UploadPage() {
   };
 
   const handleSave = async () => {
+    if (guestMode || !user) return;
     const trimmed = name.trim();
     if (!trimmed) {
       setNameError('Name is required.');
@@ -120,14 +122,14 @@ export default function UploadPage() {
 
       if (isSupabaseConfigured()) {
         if (nam.file) {
-          namPublic = await uploadNamFile(nam.file);
+          namPublic = await uploadNamFile(nam.file, user.id);
           if (!namPublic) {
             setSubmitError('NAM file upload failed.');
             return;
           }
         }
         if (ir.file) {
-          irPublic = await uploadIrFile(ir.file);
+          irPublic = await uploadIrFile(ir.file, user.id);
           if (!irPublic) {
             setSubmitError('IR file upload failed.');
             return;
@@ -161,11 +163,14 @@ export default function UploadPage() {
         return;
       }
 
-      const created = await createTone({
-        ...baseFields,
-        namFileURL: namPublic,
-        irFileURL: irPublic,
-      });
+      const created = await createTone(
+        {
+          ...baseFields,
+          namFileURL: namPublic,
+          irFileURL: irPublic,
+        },
+        user.id,
+      );
       if (created) {
         addTone(created);
         setSyncStatus('synced');
@@ -208,6 +213,21 @@ export default function UploadPage() {
         </div>
 
         <div className="flex flex-col gap-6">
+          {guestMode ? (
+            <div className="rounded-md border border-brand-accent/30 bg-brand-accent/10 p-4">
+              <p className="mb-3 font-body text-sm text-brand-text">
+                Sign in with Google to save your tones
+              </p>
+              <button
+                type="button"
+                onClick={() => void signInWithGoogle()}
+                className="rounded-full bg-brand-accent px-4 py-2 font-display text-xs font-semibold uppercase tracking-wide text-black"
+              >
+                Sign in with Google
+              </button>
+            </div>
+          ) : null}
+
           {submitError ? (
             <p className="text-sm text-red-400">{submitError}</p>
           ) : null}
@@ -217,7 +237,7 @@ export default function UploadPage() {
               Tone Name *
             </label>
             <input
-              disabled={uploading}
+              disabled={formDisabled}
               value={name}
               onChange={(e) => {
                 setName(e.target.value);
@@ -236,7 +256,7 @@ export default function UploadPage() {
               Notes
             </label>
             <textarea
-              disabled={uploading}
+              disabled={formDisabled}
               rows={4}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -249,7 +269,7 @@ export default function UploadPage() {
             selectedTags={selectedTags}
             tagInput={tagInput}
             availableTags={availableTags}
-            disabled={uploading}
+            disabled={formDisabled}
             onTagInputChange={handleTagInputChange}
             onTagInputKeyDown={handleTagInputKeyDown}
             onRemoveTag={removeTag}
@@ -258,7 +278,7 @@ export default function UploadPage() {
 
           <AmpStyleSelect
             value={ampStyle}
-            disabled={uploading}
+            disabled={formDisabled}
             onChange={setAmpStyle}
           />
 
@@ -268,7 +288,7 @@ export default function UploadPage() {
             </label>
             <button
               type="button"
-              disabled={uploading}
+              disabled={formDisabled}
               onClick={() => setFavorite((f) => !f)}
               className={`w-fit rounded-full border px-4 py-2 font-body text-sm font-medium transition-all duration-200 disabled:opacity-50 ${
                 favorite
@@ -287,7 +307,7 @@ export default function UploadPage() {
             Icon={FileAudio}
             emptyCta="Choose .nam file"
             displayName={nam.displayName}
-            disabled={uploading}
+            disabled={formDisabled}
             inputRef={nam.inputRef}
             onInputChange={nam.onInputChange}
             onClear={nam.clear}
@@ -301,7 +321,7 @@ export default function UploadPage() {
             Icon={Mic2}
             emptyCta="Choose .wav file"
             displayName={ir.displayName}
-            disabled={uploading}
+            disabled={formDisabled}
             inputRef={ir.inputRef}
             onInputChange={ir.onInputChange}
             onClear={ir.clear}
@@ -311,11 +331,11 @@ export default function UploadPage() {
           <div className="flex gap-3 pt-2">
             <button
               type="button"
-              disabled={uploading}
+              disabled={formDisabled}
               onClick={() => void handleSave()}
               className="rounded-full bg-brand-accent px-6 py-2.5 font-display text-sm font-semibold text-black shadow-[0_0_24px_-6px_rgba(232,255,71,0.5)] transition-colors hover:bg-brand-accentDim disabled:opacity-50"
             >
-              {uploading ? 'Uploading...' : 'Save Tone'}
+              {guestMode ? 'Sign in to save' : uploading ? 'Uploading...' : 'Save Tone'}
             </button>
             <button
               type="button"

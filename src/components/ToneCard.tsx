@@ -7,6 +7,7 @@ import type { Tone } from '../types/tone';
 import { useToneStore } from '../store/useToneStore';
 import { toggleFavorite as toggleFavoriteRemote } from '../services/toneService';
 import { useSelectedTone } from '../hooks/useSelectedTone';
+import { useAuth } from '../context/AuthContext';
 
 export default function ToneCard({
   tone,
@@ -16,6 +17,8 @@ export default function ToneCard({
   index?: number;
 }) {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const isGuest = !authLoading && !user;
   const toggleFavoriteLocal = useToneStore((s) => s.toggleFavorite);
   const { selectedTone, selectTone } = useSelectedTone();
   const isSelected = selectedTone?.id === tone.id;
@@ -66,6 +69,10 @@ export default function ToneCard({
           type="button"
           onClick={(e) => {
             e.stopPropagation();
+            if (isGuest) {
+              toggleFavoriteLocal(tone.id);
+              return;
+            }
             void (async () => {
               const ok = await toggleFavoriteRemote(tone.id, tone.favorite);
               if (ok) toggleFavoriteLocal(tone.id);
