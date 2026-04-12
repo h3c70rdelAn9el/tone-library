@@ -116,7 +116,7 @@ export default function LibraryPage() {
             ) : tones.length === 0 ? (
               <EmptyState message="No tones match your search." />
             ) : (
-              <div className="flex max-w-xl flex-col gap-2">
+              <div className="flex w-full min-w-0 flex-col gap-2">
                 {tones.map((tone, i) => (
                   <ToneCard
                     key={tone.id}
@@ -135,13 +135,13 @@ export default function LibraryPage() {
         <div className="flex shrink-0 items-center justify-center border-b border-brand-border px-4 py-6 lg:w-1/2 lg:border-b-0 lg:border-r lg:py-8 xl:w-3/5 min-h-0">
           <AmpDisplay tone={selectedTone} />
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 lg:w-1/2 lg:py-6 xl:w-2/5">
+        <div className="min-h-0 flex-1 overflow-y-auto py-4 lg:py-6">
           {loading ? (
             <LoadingState />
           ) : tones.length === 0 ? (
             <EmptyState message="No tones match your search." />
           ) : (
-            <div className="flex max-w-xl flex-col gap-2 lg:pr-2">
+            <div className="flex w-full min-w-0 flex-col gap-2 lg:pr-2">
               {tones.map((tone, i) => (
                 <ToneCard
                   key={tone.id}

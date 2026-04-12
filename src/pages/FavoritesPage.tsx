@@ -70,7 +70,7 @@ export default function FavoritesPage() {
             ) : tones.length === 0 ? (
               <EmptyState message="No favorites yet — star a tone to save it here" />
             ) : (
-              <div className="flex max-w-xl flex-col gap-2 lg:pr-2">
+              <div className="flex w-full min-w-0 flex-col gap-2 lg:pr-2">
                 {tones.map((tone, i) => (
                   <ToneCard key={tone.id} tone={tone} index={i} />
                 ))}
