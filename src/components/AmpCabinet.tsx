@@ -13,8 +13,8 @@ export default function AmpCabinet({ theme }: AmpCabinetProps) {
     <svg
       viewBox="0 0 600 380"
       width="100%"
-      height="auto"
-      className="max-h-[min(48vh,380px)] drop-shadow-2xl -mt-1"
+      className="aspect-[600/380] h-auto w-full max-h-[min(48vh,380px)] drop-shadow-2xl -mt-1"
+      preserveAspectRatio="xMidYMid meet"
       role="img"
       aria-hidden
     >

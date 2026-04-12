@@ -24,8 +24,8 @@ export default function AmpHead({ tone, theme }: AmpHeadProps) {
     <svg
       viewBox="0 0 600 280"
       width="100%"
-      height="auto"
-      className="max-h-[min(40vh,280px)] drop-shadow-2xl"
+      className="aspect-[600/280] h-auto w-full max-h-[min(40vh,280px)] drop-shadow-2xl"
+      preserveAspectRatio="xMidYMid meet"
       role="img"
       aria-label={`Amp head for ${tone.name}`}
     >
