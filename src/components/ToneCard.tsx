@@ -22,7 +22,7 @@ export default function ToneCard({ tone, index = 0 }: { tone: Tone; index?: numb
       layout
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, delay: index * 0.05, ease: 'easeOut' }}
+      transition={{ duration: 0.175, delay: index * 0.05, ease: 'easeOut' }}
       role="button"
       tabIndex={0}
       onClick={() => selectTone(tone)}
@@ -33,14 +33,14 @@ export default function ToneCard({ tone, index = 0 }: { tone: Tone; index?: numb
         }
       }}
       className={clsx(
-        'group flex w-full min-w-0 cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 transition-colors duration-200',
+        'group flex w-full min-w-0 cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 transition-all duration-plugin ease-plugin',
         isSelected
-          ? 'border-brand-accent/50 bg-brand-accent/10 shadow-[inset_3px_0_0_0_rgba(232,255,71,0.85)]'
-          : 'border-brand-border bg-brand-card/80 hover:bg-brand-surface',
+          ? 'z-[1] scale-[1.02] border-brand-accent/60 bg-gradient-to-br from-brand-accent/[0.12] via-brand-card to-brand-surface/90 shadow-[0_0_28px_-8px_rgba(232,255,71,0.35)] ring-1 ring-brand-accent/25 animate-tone-active-pulse'
+          : 'border-brand-border/90 bg-gradient-to-br from-brand-card to-brand-surface/70 hover:-translate-y-0.5 hover:border-brand-accent/30 hover:bg-gradient-to-br hover:from-brand-card hover:to-brand-surface hover:shadow-[0_10px_28px_-14px_rgba(232,255,71,0.18)]',
       )}>
       <div className="min-w-0  flex-1">
         <div className="flex items-center gap-2">
-          <h3 className="min-w-0 truncate font-display text-base font-semibold tracking-tight text-brand-text group-hover:text-brand-accent">
+          <h3 className="min-w-0 truncate font-display-heading text-base font-semibold text-brand-text group-hover:text-brand-accent">
             {tone.name}
           </h3>
         </div>

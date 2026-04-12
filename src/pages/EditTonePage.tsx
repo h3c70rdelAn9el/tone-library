@@ -35,14 +35,14 @@ export default function EditTonePage() {
         <button
           type="button"
           onClick={() => void signInWithGoogle()}
-          className="w-fit rounded-full bg-brand-accent px-4 py-2 font-display text-xs font-semibold uppercase tracking-wide text-black"
+          className="btn-primary-sm w-fit"
         >
           Sign in with Google
         </button>
         <button
           type="button"
           onClick={() => navigate(`/tone/${tone.id}`)}
-          className="w-fit text-sm text-brand-subtext underline transition-colors hover:text-brand-text"
+          className="text-sm text-brand-subtext underline underline-offset-2 transition-all duration-plugin ease-plugin hover:text-brand-text"
         >
           Back to tone
         </button>

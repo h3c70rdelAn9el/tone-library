@@ -1,3 +1,12 @@
+      keyframes: {
+        'subtle-pulse': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.45' },
+        },
+      },
+      animation: {
+        'subtle-pulse': 'subtle-pulse 2.2s ease-in-out infinite',
+      },
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
@@ -20,6 +29,30 @@ export default {
         display: ["'Outfit'", 'system-ui', 'sans-serif'],
         body: ["'Plus Jakarta Sans'", 'system-ui', 'sans-serif'],
         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+      },
+      letterSpacing: {
+        display: '-0.02em',
+      },
+      transitionDuration: {
+        plugin: '175ms',
+      },
+      transitionTimingFunction: {
+        plugin: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
+      },
+      keyframes: {
+        'tone-active-pulse': {
+          '0%, 100%': {
+            boxShadow:
+              'inset 3px 0 0 0 rgba(232, 255, 71, 0.85), 0 0 0 0 rgba(232, 255, 71, 0.12)',
+          },
+          '50%': {
+            boxShadow:
+              'inset 3px 0 0 0 rgba(232, 255, 71, 0.95), 0 0 28px -6px rgba(232, 255, 71, 0.28)',
+          },
+        },
+      },
+      animation: {
+        'tone-active-pulse': 'tone-active-pulse 3s ease-in-out infinite',
       },
     },
   },

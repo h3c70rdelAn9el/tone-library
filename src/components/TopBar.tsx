@@ -3,7 +3,12 @@ import UserMenu from './UserMenu';
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" width={16} height={16} aria-hidden>
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width={16}
+      height={16}
+      aria-hidden>
       <path
         fill="currentColor"
         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -44,8 +49,7 @@ export default function TopBar() {
       <button
         type="button"
         onClick={() => void signInWithGoogle()}
-        className="topbar-signin-pulse flex items-center gap-2 rounded-full bg-brand-accent px-4 py-2 font-display text-xs font-semibold uppercase tracking-widest text-black"
-      >
+        className="animate-subtle-pulse flex flex-row btn-primary-sm gap-2 uppercase tracking-widest">
         <GoogleIcon className="shrink-0 opacity-90" />
         Sign in with Google
       </button>

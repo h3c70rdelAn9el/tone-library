@@ -9,6 +9,7 @@ import LoadingState from '../components/LoadingState';
 import SearchBar from '../components/SearchBar';
 import FilterPills from '../components/FilterPills';
 import AmpDisplay from '../components/AmpDisplay';
+import SignalIndicator from '../components/SignalIndicator';
 import { X } from 'lucide-react';
 
 const DEMO_TONE_COUNT = 6;
@@ -76,10 +77,25 @@ export default function LibraryPage() {
 
       <div className="shrink-0 border-b border-brand-border px-4 py-4 lg:px-8 lg:py-6">
         <div className="mb-4">
-          <h1 className="mb-1 font-display text-3xl font-semibold tracking-tight text-brand-text lg:text-4xl">
+          <h1 className="mb-1 font-display-heading text-3xl font-semibold text-brand-text lg:text-4xl">
             ToneForge
           </h1>
-          <p className="text-sm text-brand-subtext">{subheading}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <p className="text-sm text-brand-subtext">{subheading}</p>
+            {selectedTone ? (
+              <div className="flex items-center gap-3 border-l border-brand-border/80 pl-4">
+                <SignalIndicator />
+                <div className="min-w-0">
+                  <p className="font-body text-[10px] font-semibold uppercase tracking-wider text-brand-muted">
+                    Active tone
+                  </p>
+                  <p className="truncate font-display text-sm font-semibold text-brand-accent">
+                    {selectedTone.name}
+                  </p>
+                </div>
+              </div>
+            ) : null}
+          </div>
         </div>
         <div className="flex flex-col gap-3">
           <SearchBar
@@ -94,12 +110,14 @@ export default function LibraryPage() {
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:hidden">
         <div className="flex">
           <button
-            className={`flex-1 py-2 font-semibold text-lg border-b-2 transition-colors ${mobileSection === 'amp' ? 'border-brand-border text-brand-text' : 'border-transparent text-brand-subtext'}`}
+            type="button"
+            className={`flex-1 py-2 font-display text-lg font-semibold tracking-display border-b-2 transition-all duration-plugin ease-plugin ${mobileSection === 'amp' ? 'border-brand-accent text-brand-text' : 'border-transparent text-brand-subtext'}`}
             onClick={() => setMobileSection('amp')}>
             Amp
           </button>
           <button
-            className={`flex-1 py-2 font-semibold text-lg border-b-2 transition-colors ${mobileSection === 'tones' ? 'border-brand-border text-brand-text' : 'border-transparent text-brand-subtext'}`}
+            type="button"
+            className={`flex-1 py-2 font-display text-lg font-semibold tracking-display border-b-2 transition-all duration-plugin ease-plugin ${mobileSection === 'tones' ? 'border-brand-accent text-brand-text' : 'border-transparent text-brand-subtext'}`}
             onClick={() => setMobileSection('tones')}>
             Tones
           </button>
