@@ -1,14 +1,13 @@
 import supabase, { isSupabaseConfigured } from '../lib/supabase';
+import { mockTones } from '../data/mockTones';
+
+// Toggle this flag to switch between mock data and Supabase
+export const USE_MOCK_DATA = true;
 import type { AmpStyle, Tone } from '../types/tone';
 
 function parseAmpStyle(raw: string | null | undefined): AmpStyle | null {
   if (raw == null || raw === '') return null;
-  const allowed: AmpStyle[] = [
-    'modern-black',
-    'vintage-cream',
-    'british-gold',
-    'custom-dark',
-  ];
+  const allowed: AmpStyle[] = ['modern-black', 'vintage-cream', 'british-gold', 'custom-dark'];
   return (allowed as string[]).includes(raw) ? (raw as AmpStyle) : null;
 }
 
@@ -28,8 +27,7 @@ type DbToneRow = {
 
 function rowToTone(row: DbToneRow): Tone {
   const created = row.created_at;
-  const dateOnly =
-    created.length >= 10 ? created.slice(0, 10) : created.split('T')[0] ?? created;
+  const dateOnly = created.length >= 10 ? created.slice(0, 10) : (created.split('T')[0] ?? created);
   return {
     id: row.id,
     name: row.name,
@@ -47,6 +45,9 @@ function rowToTone(row: DbToneRow): Tone {
 
 /** Returns null when the request failed. Empty array means no rows. */
 export async function tryFetchAllTones(): Promise<Tone[] | null> {
+  if (USE_MOCK_DATA) {
+    return mockTones;
+  }
   if (!isSupabaseConfigured()) {
     console.error('Supabase env vars are not configured.');
     return null;
@@ -83,8 +84,7 @@ export function filterTonesLocally(
       return false;
     }
     if (q) {
-      const hay =
-        `${tone.name} ${tone.notes} ${tone.tags.join(' ')}`.toLowerCase();
+      const hay = `${tone.name} ${tone.notes} ${tone.tags.join(' ')}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -97,6 +97,9 @@ export async function trySearchTones(
   tags: string[],
   favoritesOnly: boolean,
 ): Promise<Tone[] | null> {
+  if (USE_MOCK_DATA) {
+    return filterTonesLocally(mockTones, query, tags, favoritesOnly);
+  }
   if (!isSupabaseConfigured()) {
     return null;
   }
@@ -157,9 +160,7 @@ export async function fetchAllTags(): Promise<string[]> {
   return Array.from(set).sort((a, b) => a.localeCompare(b));
 }
 
-export async function createTone(
-  tone: Omit<Tone, 'id' | 'createdAt'>,
-): Promise<Tone | null> {
+export async function createTone(tone: Omit<Tone, 'id' | 'createdAt'>): Promise<Tone | null> {
   if (!isSupabaseConfigured()) {
     console.error('Supabase env vars are not configured.');
     return null;
@@ -177,11 +178,7 @@ export async function createTone(
     amp_style: tone.ampStyle ?? 'modern-black',
   };
 
-  const { data, error } = await supabase
-    .from('tones')
-    .insert(insert)
-    .select()
-    .single();
+  const { data, error } = await supabase.from('tones').insert(insert).select().single();
 
   if (error) {
     console.error(error);
@@ -207,19 +204,13 @@ export async function deleteTone(id: string): Promise<boolean> {
   return true;
 }
 
-export async function toggleFavorite(
-  id: string,
-  current: boolean,
-): Promise<boolean> {
+export async function toggleFavorite(id: string, current: boolean): Promise<boolean> {
   if (!isSupabaseConfigured()) {
     console.error('Supabase env vars are not configured.');
     return false;
   }
 
-  const { error } = await supabase
-    .from('tones')
-    .update({ favorite: !current })
-    .eq('id', id);
+  const { error } = await supabase.from('tones').update({ favorite: !current }).eq('id', id);
 
   if (error) {
     console.error(error);
@@ -236,9 +227,7 @@ export async function uploadNamFile(file: File): Promise<string | null> {
   }
 
   const path = `${Date.now()}-${file.name}`;
-  const { data, error } = await supabase.storage
-    .from('nam-files')
-    .upload(path, file);
+  const { data, error } = await supabase.storage.from('nam-files').upload(path, file);
 
   if (error) {
     console.error(error);
@@ -256,9 +245,7 @@ export async function uploadIrFile(file: File): Promise<string | null> {
   }
 
   const path = `${Date.now()}-${file.name}`;
-  const { data, error } = await supabase.storage
-    .from('ir-files')
-    .upload(path, file);
+  const { data, error } = await supabase.storage.from('ir-files').upload(path, file);
 
   if (error) {
     console.error(error);
