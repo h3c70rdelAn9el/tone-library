@@ -1,4 +1,4 @@
-# 🎸 ToneForge — Phase 1 Cursor Instructions
+# 🎸 ToneVault — Phase 1 Cursor Instructions
 
 ## Context
 
@@ -129,7 +129,7 @@ Create and export `mockTones` array with 6 entries covering genres: metal, clean
 
 ### `LibraryPage.tsx`
 
-- Heading: "ToneForge" font-display bold uppercase, subtext showing tone count
+- Heading: "ToneVault" font-display bold uppercase, subtext showing tone count
 - Search input with Search icon — filters by name and notes
 - Tag filter buttons — "All" + all unique tags from mock data — toggle active tag
 - Active filter button: `bg-brand-accent text-black`

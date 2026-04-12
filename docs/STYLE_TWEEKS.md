@@ -1,8 +1,8 @@
-# ToneForge — UI Upgrade Plan (v1.0)
+# ToneVault — UI Upgrade Plan (v1.0)
 
 ## Context
 
-ToneForge is already a working guitar tone preset app with a dark, modern UI.
+ToneVault is already a working guitar tone preset app with a dark, modern UI.
 
 Current state:
 
@@ -12,7 +12,7 @@ Current state:
 - Preset/tone library concept working
 
 Goal of this phase:
-👉 Transform ToneForge from “working app” → “feels like a real audio product (Neural DSP / plugin-grade UI)”
+👉 Transform ToneVault from “working app” → “feels like a real audio product (Neural DSP / plugin-grade UI)”
 
 ---
 
@@ -20,7 +20,7 @@ Goal of this phase:
 
 ## Target feel
 
-ToneForge should feel like:
+ToneVault should feel like:
 
 - A guitar amp plugin interface
 - A creative “tone shaping studio”
@@ -117,7 +117,7 @@ Behavior:
 
 ---
 
-# 5. Signature ToneForge UI Element (MUST ADD)
+# 5. Signature ToneVault UI Element (MUST ADD)
 
 Pick at least ONE:
 
@@ -200,7 +200,7 @@ If NO → adjust motion or contrast
 
 # 10. Next Build Target
 
-After implementing this phase, ToneForge should have:
+After implementing this phase, ToneVault should have:
 
 - Strong visual hierarchy
 - Clear active tone state
@@ -212,6 +212,6 @@ After implementing this phase, ToneForge should have:
 
 # End Goal
 
-ToneForge should feel like:
+ToneVault should feel like:
 
 > “A digital guitar amp you open to _shape sound_, not browse a list.”

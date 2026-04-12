@@ -1,4 +1,4 @@
-# 🎸 ToneForge — Phase 4 Cursor Instructions
+# 🎸 ToneVault — Phase 4 Cursor Instructions
 
 ## Goal
 

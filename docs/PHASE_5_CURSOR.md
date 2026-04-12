@@ -1,4 +1,4 @@
-# 🎸 ToneForge — Phase 5 Redesign Cursor Instructions
+# 🎸 ToneVault — Phase 5 Redesign Cursor Instructions
 
 ## Goal
 

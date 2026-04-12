@@ -1,4 +1,4 @@
-# 🎸 ToneForge — Phase 1 Build Instructions
+# 🎸 ToneVault — Phase 1 Build Instructions
 
 > Hand this file to Cursor. It will scaffold the full Phase 1 UI.
 
@@ -392,7 +392,7 @@ export default function LibraryPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="font-display text-4xl font-bold uppercase tracking-widest text-brand-text mb-1">
-          ToneForge
+          ToneVault
         </h1>
         <p className="text-brand-subtext text-sm">{mockTones.length} tones saved</p>
       </div>

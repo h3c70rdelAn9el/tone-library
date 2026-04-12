@@ -69,7 +69,9 @@ export default defineConfig([
 ]);
 ```
 
-ToneForge
+# ToneVault
+
+ToneVault is a modern React + TypeScript + Vite app for managing and sharing guitar tones, featuring a dark, plugin-grade UI and advanced UX enhancements.
 
 ```
 
