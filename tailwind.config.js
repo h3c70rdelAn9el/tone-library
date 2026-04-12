@@ -1,4 +1,4 @@
-      // Removed duplicate subtle-pulse animation definition to fix PostCSS syntax error
+// Removed duplicate subtle-pulse animation definition to fix PostCSS syntax error
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
@@ -34,8 +34,7 @@ export default {
       keyframes: {
         'tone-active-pulse': {
           '0%, 100%': {
-            boxShadow:
-              'inset 3px 0 0 0 rgba(232, 255, 71, 0.85), 0 0 0 0 rgba(232, 255, 71, 0.12)',
+            boxShadow: 'inset 3px 0 0 0 rgba(232, 255, 71, 0.85), 0 0 0 0 rgba(232, 255, 71, 0.12)',
           },
           '50%': {
             boxShadow:
