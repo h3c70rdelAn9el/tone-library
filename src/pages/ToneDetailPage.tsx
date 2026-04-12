@@ -159,13 +159,13 @@ export default function ToneDetailPage() {
         <p className="font-body text-xs text-brand-muted">Added {tone.createdAt}</p>
       </div>
 
-      {/* Below lg: detail first, amp second. lg+: amp left, detail right (matches Library). */}
+      {/* Amp first so it is visible without hunting past a flex-1 detail pane (fixes “missing” amp on narrow viewports). lg+: amp left, detail right. */}
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
-        <div className="order-2 flex min-h-[220px] shrink-0 items-center justify-center border-b border-brand-border px-4 py-8 lg:order-1 lg:min-h-0 lg:w-1/2 lg:overflow-y-auto lg:border-b-0 lg:border-r lg:py-10 xl:w-3/5">
+        <div className="flex w-full shrink-0 flex-col items-center justify-center border-b border-brand-border px-4 py-8 lg:min-h-0 lg:w-1/2 lg:overflow-y-auto lg:border-b-0 lg:border-r lg:py-10 xl:w-3/5">
           <AmpDisplay tone={tone} />
         </div>
 
-        <div className="order-1 min-h-0 w-full min-w-0 flex-1 overflow-y-auto px-4 py-6 lg:order-2 lg:w-1/2 lg:py-8 xl:w-2/5">
+        <div className="w-full min-w-0 shrink-0 px-4 py-6 lg:min-h-0 lg:w-1/2 lg:flex-1 lg:overflow-y-auto lg:py-8 xl:w-2/5">
           <div className="mx-auto w-full max-w-2xl lg:mx-0 lg:max-w-none lg:pr-2">
             <div className="mb-8 flex flex-wrap gap-2">
               {tone.tags.map((tag) => (
