@@ -4,6 +4,7 @@ import TopBar from './components/TopBar';
 import LibraryPage from './pages/LibraryPage';
 import FavoritesPage from './pages/FavoritesPage';
 import UploadPage from './pages/UploadPage';
+import EditTonePage from './pages/EditTonePage';
 import ToneDetailPage from './pages/ToneDetailPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import { SelectedToneProvider } from './context/SelectedToneProvider';
@@ -21,6 +22,7 @@ function AppShell() {
               <Route path="/" element={<LibraryPage />} />
               <Route path="/favorites" element={<FavoritesPage />} />
               <Route path="/upload" element={<UploadPage />} />
+              <Route path="/tone/:id/edit" element={<EditTonePage />} />
               <Route path="/tone/:id" element={<ToneDetailPage />} />
               <Route path="/auth/callback" element={<AuthCallbackPage />} />
             </Routes>
