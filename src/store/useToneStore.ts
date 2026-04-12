@@ -21,6 +21,7 @@ type ToneStore = {
   setFavoritesOnly: (val: boolean) => void;
   clearFilters: () => void;
   addTone: (tone: Tone) => void;
+  updateTone: (tone: Tone) => void;
   deleteTone: (id: string) => void;
   toggleFavorite: (id: string) => void;
   getToneById: (id: string) => Tone | undefined;
@@ -55,6 +56,25 @@ export const useToneStore = create<ToneStore>()(
       clearFilters: () =>
         set({ searchQuery: '', activeTags: [], favoritesOnly: false }),
       addTone: (tone) => set((s) => ({ tones: [tone, ...s.tones] })),
+      updateTone: (tone) =>
+        set((s) => {
+          const prev = s.tones.find((t) => t.id === tone.id);
+          if (
+            prev?.namFileURL?.startsWith('blob:') &&
+            prev.namFileURL !== tone.namFileURL
+          ) {
+            URL.revokeObjectURL(prev.namFileURL);
+          }
+          if (
+            prev?.irFileURL?.startsWith('blob:') &&
+            prev.irFileURL !== tone.irFileURL
+          ) {
+            URL.revokeObjectURL(prev.irFileURL);
+          }
+          return {
+            tones: s.tones.map((t) => (t.id === tone.id ? tone : t)),
+          };
+        }),
       deleteTone: (id) =>
         set((s) => {
           const tone = s.tones.find((t) => t.id === id);

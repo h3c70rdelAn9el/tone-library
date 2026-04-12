@@ -43,6 +43,15 @@ export function useFilePickState() {
     if (inputRef.current) inputRef.current.value = '';
   }, []);
 
+  /** Set filename display without a picked file (e.g. edit existing tone). */
+  const hydrateDisplayOnly = useCallback((nextDisplayName: string) => {
+    revokeCurrentUrl();
+    setFile(null);
+    setObjectUrl(null);
+    setDisplayName(nextDisplayName);
+    if (inputRef.current) inputRef.current.value = '';
+  }, []);
+
   return {
     inputRef,
     displayName,
@@ -50,5 +59,6 @@ export function useFilePickState() {
     objectUrl,
     onInputChange,
     clear,
+    hydrateDisplayOnly,
   };
 }

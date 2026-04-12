@@ -200,6 +200,40 @@ export async function createTone(
   return rowToTone(data as DbToneRow);
 }
 
+export async function updateTone(
+  id: string,
+  updates: {
+    name: string;
+    tags: string[];
+    notes: string | null;
+    nam_file: string | null;
+    ir_file: string | null;
+    nam_file_url: string | null;
+    ir_file_url: string | null;
+    favorite: boolean;
+    amp_style: string | null;
+  },
+): Promise<Tone | null> {
+  if (!isSupabaseConfigured()) {
+    console.error('Supabase env vars are not configured.');
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from('tones')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error(error);
+    return null;
+  }
+
+  return rowToTone(data as DbToneRow);
+}
+
 export async function deleteTone(id: string): Promise<boolean> {
   if (!isSupabaseConfigured()) {
     console.error('Supabase env vars are not configured.');

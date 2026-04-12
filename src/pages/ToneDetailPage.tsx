@@ -260,6 +260,7 @@ export default function ToneDetailPage() {
                 <div className="flex flex-wrap gap-3 pb-4">
                   <button
                     type="button"
+                    onClick={() => navigate(`/tone/${tone.id}/edit`)}
                     className="flex items-center gap-2 rounded-full border border-brand-border bg-brand-card px-4 py-2 text-sm text-brand-subtext transition-all hover:border-brand-accent/40 hover:text-brand-text"
                   >
                     <Pencil size={13} />
