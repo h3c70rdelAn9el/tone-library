@@ -1,6 +1,7 @@
-# 🎸 Tone Library — Phase 1 Cursor Instructions
+# 🎸 ToneForge — Phase 1 Cursor Instructions
 
 ## Context
+
 - React + Vite + **TypeScript** project
 - Tailwind CSS v3 already installed
 - Use `.tsx` for all components and pages, `.ts` for data files
@@ -8,6 +9,7 @@
 ---
 
 ## Stack Already Installed
+
 - tailwindcss@3 + postcss + autoprefixer
 - react-router-dom
 - lucide-react
@@ -16,6 +18,7 @@
 ---
 
 ## Tailwind Config
+
 Update `tailwind.config.js` with this custom theme:
 
 - Content paths: `./index.html` and `./src/**/*.{js,ts,jsx,tsx}`
@@ -37,6 +40,7 @@ Update `tailwind.config.js` with this custom theme:
 ---
 
 ## index.css
+
 - Import Google Fonts: Barlow Condensed (400, 600, 700, 800), DM Sans (300, 400, 500), JetBrains Mono (400, 500)
 - Add Tailwind directives: base, components, utilities
 - Set body: background `#0d0d0f`, color `#e8e8f0`, font DM Sans
@@ -45,6 +49,7 @@ Update `tailwind.config.js` with this custom theme:
 ---
 
 ## vite.config.ts
+
 - Only use `@vitejs/plugin-react`
 - No Tailwind vite plugin
 
@@ -73,6 +78,7 @@ src/
 ## Data — `mockTones.ts`
 
 Create a `Tone` type with fields:
+
 - `id`: string
 - `name`: string
 - `tags`: string[]
@@ -89,16 +95,19 @@ Create and export `mockTones` array with 6 entries covering genres: metal, clean
 ## Components
 
 ### `TagBadge.tsx`
+
 - Props: `tag: string`
 - Small monospace pill
 - Style: `bg-brand-border`, `text-brand-subtext`, uppercase, wide tracking, xs text
 
 ### `EmptyState.tsx`
+
 - Props: `message?: string`
 - Centered layout with a Guitar icon from lucide-react
 - Muted text, large font-display uppercase label
 
 ### `ToneCard.tsx`
+
 - Props: `tone: Tone`
 - Clickable card navigating to `/tone/:id` via useNavigate
 - Shows: name (font-display, uppercase), favorite star if applicable, truncated notes, NAM filename with FileAudio icon, IR filename with Mic2 icon, tag badges
@@ -106,6 +115,7 @@ Create and export `mockTones` array with 6 entries covering genres: metal, clean
 - Style: `bg-brand-card`, `border-brand-border`, rounded-lg
 
 ### `Sidebar.tsx`
+
 - Sticky full-height sidebar, `w-56`, `bg-brand-surface`, right border
 - Logo: Guitar icon + "ToneLib" in font-display uppercase
 - Nav links: Library (`/`) and Add Tone (`/upload`) using NavLink
@@ -118,7 +128,8 @@ Create and export `mockTones` array with 6 entries covering genres: metal, clean
 ## Pages
 
 ### `LibraryPage.tsx`
-- Heading: "Tone Library" font-display bold uppercase, subtext showing tone count
+
+- Heading: "ToneForge" font-display bold uppercase, subtext showing tone count
 - Search input with Search icon — filters by name and notes
 - Tag filter buttons — "All" + all unique tags from mock data — toggle active tag
 - Active filter button: `bg-brand-accent text-black`
@@ -126,6 +137,7 @@ Create and export `mockTones` array with 6 entries covering genres: metal, clean
 - Show EmptyState when no results
 
 ### `UploadPage.tsx`
+
 - Heading: "Add Tone"
 - Form fields (no HTML `<form>` submit — use button onClick):
   - Text input: Tone Name (required)
@@ -137,6 +149,7 @@ Create and export `mockTones` array with 6 entries covering genres: metal, clean
 - On save: show alert saying file would be saved in Phase 2, then navigate to `/`
 
 ### `ToneDetailPage.tsx`
+
 - Read `:id` from URL params, find tone in mockTones
 - Back button with ArrowLeft icon
 - Large font-display title (uppercase, 5xl), favorite star if applicable
@@ -150,6 +163,7 @@ Create and export `mockTones` array with 6 entries covering genres: metal, clean
 ---
 
 ## `App.tsx`
+
 - Wrap everything in BrowserRouter
 - Flex layout: Sidebar on left (fixed width), main content area scrollable on right
 - Routes:
@@ -160,6 +174,7 @@ Create and export `mockTones` array with 6 entries covering genres: metal, clean
 ---
 
 ## Design Rules
+
 - Background: `bg-brand-bg` (`#0d0d0f`)
 - Cards: `bg-brand-card` with `border-brand-border`
 - Accent color `#e8ff47` used for: active states, icons, save buttons, hover highlights

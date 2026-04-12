@@ -4,6 +4,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Centralized theme tokens (animations, scrollbars, non-Tailwind contexts) */
+:root {
+  --brand-bg: #0d0d0f;
+  --brand-surface: #16161a;
+  --brand-card: #1c1c22;
+  --brand-border: #2a2a35;
+  --brand-accent: #e8ff47;
+  --brand-text: #e8e8f0;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -14,22 +24,41 @@ body {
 }
 
 body {
-  background-color: #0d0d0f;
-  color: #e8e8f0;
+  background-color: var(--brand-bg);
+  color: var(--brand-text);
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+@layer components {
+  /* Use arbitrary duration/ease here — @apply cannot resolve theme.extend names like duration-plugin in all setups */
+  .btn-primary {
+    @apply rounded-full bg-brand-accent px-6 py-2.5 font-display text-sm font-semibold text-black shadow-[0_0_24px_-6px_rgba(232,255,71,0.45)] transition-all duration-[175ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] hover:brightness-110 active:scale-[0.98] disabled:opacity-50;
+  }
+
+  .btn-primary-sm {
+    @apply rounded-full bg-brand-accent px-4 py-2 font-display text-xs font-semibold uppercase tracking-wide text-black shadow-[0_0_20px_-8px_rgba(232,255,71,0.4)] transition-all duration-[175ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] hover:brightness-110 active:scale-[0.98] disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply rounded-full border border-brand-border bg-transparent px-4 py-2.5 text-sm text-brand-subtext transition-all duration-[175ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] hover:border-brand-accent/40 hover:text-brand-text active:scale-[0.98] disabled:opacity-50;
+  }
+
+  .font-display-heading {
+    @apply font-display tracking-[-0.02em];
+  }
+}
+
 ::-webkit-scrollbar {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #16161a;
+  background: var(--brand-surface);
 }
 ::-webkit-scrollbar-thumb {
-  background: #2a2a35;
+  background: var(--brand-border);
   border-radius: 3px;
 }
 
@@ -61,4 +90,46 @@ body {
 
 .topbar-signin-pulse {
   animation: topbar-signin-pulse 2s ease-in-out infinite;
+}
+
+@keyframes forge-glow-flash {
+  0% {
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.42;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.forge-glow-overlay {
+  pointer-events: none;
+  animation: forge-glow-flash 0.65s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  background: radial-gradient(
+    ellipse 80% 55% at 50% 45%,
+    rgba(232, 255, 71, 0.35) 0%,
+    transparent 65%
+  );
+}
+
+@keyframes signal-led-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scaleY(0.65);
+    filter: brightness(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleY(1);
+    filter: brightness(1.15);
+    box-shadow: 0 0 10px rgba(232, 255, 71, 0.45);
+  }
+}
+
+.signal-led-bar {
+  transform-origin: bottom center;
+  animation: signal-led-pulse 1.15s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
 }

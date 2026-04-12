@@ -39,7 +39,7 @@ export default function FavoritesPage() {
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
         <div className="shrink-0 border-b border-brand-border px-4 py-4 lg:px-8 lg:py-6">
           <div className="mb-4">
-            <h1 className="mb-1 flex flex-wrap items-center gap-2 font-display text-3xl font-semibold tracking-tight text-brand-text lg:text-4xl">
+            <h1 className="mb-1 flex flex-wrap items-center gap-2 font-display-heading text-3xl font-semibold text-brand-text lg:text-4xl">
               <Star
                 size={28}
                 className="shrink-0 fill-brand-accent text-brand-accent"

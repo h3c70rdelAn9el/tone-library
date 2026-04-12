@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileAudio, Mic2 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
@@ -51,6 +51,8 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
   const [submitError, setSubmitError] = useState('');
   const [uploading, setUploading] = useState(false);
   const [tagInput, setTagInput] = useState('');
+  const [forgeGlow, setForgeGlow] = useState(false);
+  const pendingNavRef = useRef<string | null>(null);
 
   const nam = useFilePickState();
   const ir = useFilePickState();
@@ -135,6 +137,18 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
   };
 
   const cancelPath = isEdit && editTone ? `/tone/${editTone.id}` : '/';
+
+  const navigateAfterForge = (path: string) => {
+    pendingNavRef.current = path;
+    setForgeGlow(true);
+  };
+
+  const onForgeGlowEnd = () => {
+    const path = pendingNavRef.current;
+    pendingNavRef.current = null;
+    setForgeGlow(false);
+    if (path) navigate(path);
+  };
 
   const resolveNamIrForSave = (): {
     namFileURL: string | null;
@@ -245,7 +259,7 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
           setSyncStatus('local');
           if (nam.objectUrl) URL.revokeObjectURL(nam.objectUrl);
           if (ir.objectUrl) URL.revokeObjectURL(ir.objectUrl);
-          navigate(`/tone/${editTone.id}`);
+          navigateAfterForge(`/tone/${editTone.id}`);
           return;
         }
 
@@ -267,7 +281,7 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
           setSyncStatus('synced');
           if (nam.objectUrl) URL.revokeObjectURL(nam.objectUrl);
           if (ir.objectUrl) URL.revokeObjectURL(ir.objectUrl);
-          navigate(`/tone/${editTone.id}`);
+          navigateAfterForge(`/tone/${editTone.id}`);
           return;
         }
 
@@ -282,7 +296,7 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
         setSyncStatus('local');
         if (nam.objectUrl) URL.revokeObjectURL(nam.objectUrl);
         if (ir.objectUrl) URL.revokeObjectURL(ir.objectUrl);
-        navigate(`/tone/${editTone.id}`);
+        navigateAfterForge(`/tone/${editTone.id}`);
         return;
       }
 
@@ -299,7 +313,7 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
         setSyncStatus('local');
         if (nam.objectUrl) URL.revokeObjectURL(nam.objectUrl);
         if (ir.objectUrl) URL.revokeObjectURL(ir.objectUrl);
-        navigate('/');
+        navigateAfterForge('/');
         return;
       }
 
@@ -316,7 +330,7 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
         setSyncStatus('synced');
         if (nam.objectUrl) URL.revokeObjectURL(nam.objectUrl);
         if (ir.objectUrl) URL.revokeObjectURL(ir.objectUrl);
-        navigate('/');
+        navigateAfterForge('/');
         return;
       }
 
@@ -331,7 +345,7 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
       setSyncStatus('local');
       if (nam.objectUrl) URL.revokeObjectURL(nam.objectUrl);
       if (ir.objectUrl) URL.revokeObjectURL(ir.objectUrl);
-      navigate('/');
+      navigateAfterForge('/');
     } catch (e) {
       console.error(e);
       setSubmitError('Something went wrong. Try again.');
@@ -355,10 +369,17 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
         : 'Save Tone';
 
   return (
-    <div className="flex h-full min-h-0 flex-col lg:flex-row lg:overflow-hidden">
+    <>
+      {forgeGlow ? (
+        <div
+          className="forge-glow-overlay fixed inset-0 z-[200]"
+          onAnimationEnd={onForgeGlowEnd}
+        />
+      ) : null}
+      <div className="flex h-full min-h-0 flex-col lg:flex-row lg:overflow-hidden">
       <div className="min-h-0 flex-1 overflow-y-auto border-brand-border p-8 lg:max-w-xl lg:shrink-0 lg:border-r">
         <div className="mb-8">
-          <h1 className="mb-1 font-display text-4xl font-semibold tracking-tight text-brand-text">
+          <h1 className="mb-1 font-display-heading text-4xl font-semibold text-brand-text">
             {title}
           </h1>
           <p className="text-sm text-brand-subtext">{subtitle}</p>
@@ -373,7 +394,7 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
               <button
                 type="button"
                 onClick={() => void signInWithGoogle()}
-                className="rounded-full bg-brand-accent px-4 py-2 font-display text-xs font-semibold uppercase tracking-wide text-black"
+                className="btn-primary-sm"
               >
                 Sign in with Google
               </button>
@@ -485,7 +506,7 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
               type="button"
               disabled={formDisabled}
               onClick={() => void handleSave()}
-              className="rounded-full bg-brand-accent px-6 py-2.5 font-display text-sm font-semibold text-black shadow-[0_0_24px_-6px_rgba(232,255,71,0.5)] transition-colors hover:bg-brand-accentDim disabled:opacity-50"
+              className="btn-primary"
             >
               {saveLabel}
             </button>
@@ -493,7 +514,7 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
               type="button"
               disabled={uploading}
               onClick={() => navigate(cancelPath)}
-              className="rounded-full px-4 py-2.5 text-sm text-brand-subtext transition-colors hover:text-brand-text disabled:opacity-50"
+              className="btn-secondary"
             >
               Cancel
             </button>
@@ -503,5 +524,6 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
 
       <UploadAmpPreviewPanel previewTone={previewTone} />
     </div>
+    </>
   );
 }

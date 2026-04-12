@@ -1,11 +1,13 @@
-# 🎸 Tone Library — Phase 4 Cursor Instructions
+# 🎸 ToneForge — Phase 4 Cursor Instructions
 
 ## Goal
+
 Add power features: advanced search, tag management, favorites view, and full Vercel deployment. The app should be production-ready and deployable with one command after this phase.
 
 ---
 
 ## No New Dependencies
+
 Everything needed is already installed. No new npm packages required.
 
 ---
@@ -43,21 +45,26 @@ src/
 ## Vercel Deploy Files (create these at project root)
 
 ### `vercel.json`
+
 ```json
 {
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
 ```
+
 This ensures React Router works correctly on Vercel — all routes serve `index.html`.
 
 ### `.env.example`
+
 Create this file (safe to commit — no real values):
+
 ```
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 ```
 
 ### `.gitignore` check
+
 Make sure `.env` is listed. Add if missing.
 
 ---
@@ -82,6 +89,7 @@ This enables fast full-text search on name, notes, and tags server-side.
 Add two new functions:
 
 ### `searchTones(query: string, tags: string[], favoritesOnly: boolean): Promise<Tone[]>`
+
 - If query is non-empty: filter using `search_vector @@ plainto_tsquery('english', query)` via `.textSearch()`
 - If tags array is non-empty: filter using `.contains('tags', tags)`
 - If favoritesOnly: filter using `.eq('favorite', true)`
@@ -90,6 +98,7 @@ Add two new functions:
 - On error: log and return empty array
 
 ### `fetchAllTags(): Promise<string[]>`
+
 - Select only the `tags` column from all tones
 - Flatten and deduplicate the array
 - Return sorted unique tag list
@@ -100,6 +109,7 @@ Add two new functions:
 ## `src/hooks/useTagList.ts`
 
 Custom hook:
+
 - Calls `fetchAllTags()` on mount
 - Returns `{ tags: string[], loading: boolean }`
 - Tags are used to populate filter UI dynamically (no more hardcoded tag list)
@@ -120,11 +130,13 @@ Accept optional params: `{ query?: string, tags?: string[], favoritesOnly?: bool
 ## Updated: `src/store/useToneStore.ts`
 
 Add filter state:
+
 - `searchQuery`: string — default `''`
 - `activeTags`: string[] — default `[]`
 - `favoritesOnly`: boolean — default `false`
 
 Add actions:
+
 - `setSearchQuery(q: string)`
 - `setActiveTags(tags: string[])`
 - `toggleActiveTag(tag: string)` — adds if not present, removes if present
@@ -138,11 +150,13 @@ Add actions:
 Extract the search input from LibraryPage into its own component.
 
 Props:
+
 - `value: string`
 - `onChange: (val: string) => void`
 - `placeholder?: string`
 
 Features:
+
 - Search icon on left (Lucide `Search`)
 - Clear button (X icon) on right — only visible when value is non-empty
 - Clicking X clears the input and calls onChange with `''`
@@ -161,6 +175,7 @@ When not provided: render as a plain span (existing behavior).
 ## Updated: `src/components/Sidebar.tsx`
 
 Add:
+
 - Favorites nav link → `/favorites` with Star icon from lucide-react
 - Below each nav label, show a small count badge:
   - Library: total tone count
@@ -197,6 +212,7 @@ Add:
 ## Updated: `src/pages/UploadPage.tsx`
 
 Add custom tag input:
+
 - Text input where user types a tag and presses Enter or comma to add it
 - Added tags appear as removable pills above the input
 - Existing preset tag toggles stay — clicking a preset adds it to the same tags array
@@ -216,6 +232,7 @@ Add custom tag input:
 ## Updated: `App.tsx`
 
 Add route:
+
 - `/favorites` → FavoritesPage
 
 ---
@@ -223,6 +240,7 @@ Add route:
 ## Vercel Deployment Instructions (include as a comment block or README section)
 
 ### Pre-deploy checklist:
+
 1. Push code to GitHub
 2. Go to https://vercel.com and import the repo
 3. Framework preset: **Vite**
@@ -234,17 +252,20 @@ Add route:
 7. Deploy
 
 ### Supabase CORS (do this before deploying):
+
 - Go to Supabase → Project Settings → API
 - Add your Vercel domain to the allowed origins list once you have it
 - Format: `https://your-app.vercel.app`
 
 ### After deploy:
+
 - Every push to `main` auto-deploys via Vercel
-- Environment variables are never exposed in the client bundle (Vite handles this safely with the VITE_ prefix)
+- Environment variables are never exposed in the client bundle (Vite handles this safely with the VITE\_ prefix)
 
 ---
 
 ## Design Rules (carry over)
+
 - No new colors, fonts, or spacing systems
 - FavoritesPage matches LibraryPage layout exactly
 - Tag input in UploadPage matches existing pill/badge style

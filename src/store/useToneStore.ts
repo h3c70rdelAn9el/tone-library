@@ -53,22 +53,15 @@ export const useToneStore = create<ToneStore>()(
             : [...s.activeTags, tag],
         })),
       setFavoritesOnly: (favoritesOnly) => set({ favoritesOnly }),
-      clearFilters: () =>
-        set({ searchQuery: '', activeTags: [], favoritesOnly: false }),
+      clearFilters: () => set({ searchQuery: '', activeTags: [], favoritesOnly: false }),
       addTone: (tone) => set((s) => ({ tones: [tone, ...s.tones] })),
       updateTone: (tone) =>
         set((s) => {
           const prev = s.tones.find((t) => t.id === tone.id);
-          if (
-            prev?.namFileURL?.startsWith('blob:') &&
-            prev.namFileURL !== tone.namFileURL
-          ) {
+          if (prev?.namFileURL?.startsWith('blob:') && prev.namFileURL !== tone.namFileURL) {
             URL.revokeObjectURL(prev.namFileURL);
           }
-          if (
-            prev?.irFileURL?.startsWith('blob:') &&
-            prev.irFileURL !== tone.irFileURL
-          ) {
+          if (prev?.irFileURL?.startsWith('blob:') && prev.irFileURL !== tone.irFileURL) {
             URL.revokeObjectURL(prev.irFileURL);
           }
           return {
@@ -88,9 +81,7 @@ export const useToneStore = create<ToneStore>()(
         }),
       toggleFavorite: (id) =>
         set((s) => ({
-          tones: s.tones.map((t) =>
-            t.id === id ? { ...t, favorite: !t.favorite } : t,
-          ),
+          tones: s.tones.map((t) => (t.id === id ? { ...t, favorite: !t.favorite } : t)),
         })),
       getToneById: (id) => get().tones.find((t) => t.id === id),
       clearStore: () => {
@@ -110,7 +101,7 @@ export const useToneStore = create<ToneStore>()(
       },
     }),
     {
-      name: 'tone-library',
+      name: 'ToneForge',
       partialize: (state) => ({
         tones: state.tones,
         syncStatus: state.syncStatus,

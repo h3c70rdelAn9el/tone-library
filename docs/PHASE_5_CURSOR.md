@@ -1,6 +1,7 @@
-# 🎸 Tone Library — Phase 5 Redesign Cursor Instructions
+# 🎸 ToneForge — Phase 5 Redesign Cursor Instructions
 
 ## Goal
+
 Complete UI redesign. Replace the dashboard layout with a responsive, immersive guitar amp experience. The selected tone is displayed as a realistic SVG amp with knobs, faceplate, and cabinet. Switching tones animates the amp in with a fade + scale effect. Sidebar collapses and opens on hover.
 
 ---
@@ -16,6 +17,7 @@ npm install framer-motion
 ## New Field: `ampStyle` on Tone
 
 ### Update Supabase table (run in SQL Editor):
+
 ```sql
 alter table tones add column if not exists amp_style text default 'modern-black';
 ```
@@ -24,14 +26,18 @@ Valid values: `'modern-black'` | `'vintage-cream'` | `'british-gold'` | `'custom
 Nullable — if null, default to `'modern-black'`
 
 ### Update `src/types/tone.ts`
+
 Add field: `ampStyle?: 'modern-black' | 'vintage-cream' | 'british-gold' | 'custom-dark' | null`
 
 ### Update `src/services/toneService.ts`
+
 - Include `amp_style` in all select queries, map to `ampStyle`
 - Include `amp_style` in createTone insert, map from `ampStyle`
 
 ### Update `src/pages/UploadPage.tsx`
+
 Add dropdown field labeled "Amp Style" with options:
+
 - `modern-black` — Modern / High Gain
 - `vintage-cream` — Vintage / Clean
 - `british-gold` — British / Classic
@@ -72,6 +78,7 @@ src/
 ## Overall Layout (replace dashboard entirely)
 
 ### Desktop layout:
+
 ```
 [Sidebar - hover to expand]  |  [Main Content Area]
                              |  [SearchBar + FilterPills]
@@ -82,6 +89,7 @@ src/
 ```
 
 ### Mobile layout (stacked):
+
 ```
 [Hamburger menu → drawer]
 [SearchBar]
@@ -95,6 +103,7 @@ src/
 ## `src/components/Sidebar.tsx` — Full Redesign
 
 ### Desktop behavior:
+
 - Default state: collapsed to `w-14` (icon only — show only icons, no labels)
 - On hover: expands to `w-56` with smooth CSS transition (`transition-all duration-300`)
 - Use CSS `group` on the sidebar element and `group-hover` on inner content
@@ -103,6 +112,7 @@ src/
 - Sync status dot always visible
 
 ### Mobile behavior:
+
 - Hidden by default
 - Hamburger icon (Menu from lucide-react) fixed top-left
 - Clicking opens a full-height drawer overlay from the left
@@ -110,6 +120,7 @@ src/
 - Use Framer Motion `AnimatePresence` for drawer open/close animation
 
 ### Both:
+
 - Background: `bg-brand-surface`
 - Right border: `border-brand-border`
 - Nav links: Library, Favorites, Add Tone
@@ -122,10 +133,12 @@ src/
 Simple hook managing which tone is currently displayed in the amp.
 
 State:
+
 - `selectedTone: Tone | null`
 - `previousTone: Tone | null` (used for exit animation)
 
 Actions:
+
 - `selectTone(tone: Tone)` — sets selectedTone, stores previous
 - `clearTone()` — sets selectedTone to null
 
@@ -140,12 +153,14 @@ Wrapper component that handles the fade + scale animation between tones.
 Props: `tone: Tone | null`
 
 Animation behavior using Framer Motion:
+
 - Use `AnimatePresence mode="wait"` so exit animation completes before enter begins
 - Each tone renders with a unique key (tone.id) so Framer Motion treats it as a new element
 - Enter animation: `opacity 0→1`, `scale 0.92→1`, duration 0.4s, ease "easeOut"
 - Exit animation: `opacity 1→0`, `scale 1→0.95`, duration 0.25s, ease "easeIn"
 
 Renders:
+
 - `AmpHead` on top
 - `AmpCabinet` below
 - Tone title displayed on the amp faceplate (passed as prop to AmpHead)
@@ -160,6 +175,7 @@ If `tone` is null: show a centered muted message "Select a tone from the library
 Define a theme map object used by AmpHead and AmpCabinet:
 
 ### `modern-black`
+
 - Body: `#1a1a1a` tolex
 - Panel: `#2a2a2a` brushed metal
 - Accent: `#e8ff47` (brand accent)
@@ -168,6 +184,7 @@ Define a theme map object used by AmpHead and AmpCabinet:
 - Grille cloth: dark charcoal weave pattern
 
 ### `vintage-cream`
+
 - Body: `#f5e6c8` cream tolex
 - Panel: `#c8a96e` gold aluminum
 - Accent: `#c8522a` (warm orange-red)
@@ -176,6 +193,7 @@ Define a theme map object used by AmpHead and AmpCabinet:
 - Grille cloth: warm tan tweed pattern
 
 ### `british-gold`
+
 - Body: `#1c1c1c` black tolex
 - Panel: `#b8922a` gold panel
 - Accent: `#e8c040`
@@ -184,6 +202,7 @@ Define a theme map object used by AmpHead and AmpCabinet:
 - Grille cloth: dark salt-and-pepper weave
 
 ### `custom-dark`
+
 - Body: `#0d0d14` deep navy-black
 - Panel: `#1a1a2e` dark purple-metal
 - Accent: `#7b2fff` (purple)
@@ -198,6 +217,7 @@ Define a theme map object used by AmpHead and AmpCabinet:
 SVG component. Props: `tone: Tone`, `theme: AmpTheme`
 
 ### Structure (SVG, roughly 600x280):
+
 - Outer rectangle: rounded corners (r=8), tolex body color, subtle drop shadow
 - Corner screws: 4 small circles at corners, metallic gray
 - Top strip: thin rectangle across top, slightly lighter than body
@@ -213,14 +233,16 @@ SVG component. Props: `tone: Tone`, `theme: AmpTheme`
 - Handle: centered arc shape at top of amp body (SVG path)
 
 ### Knob values mapping from tone metadata:
+
 Since real knob values don't exist yet, derive them visually from tone tags:
+
 - `high-gain` tag → GAIN knob at 85%
 - `metal` or `djent` → TREBLE at 70%, BASS at 60%
 - `clean` → GAIN at 20%, VOLUME at 60%
 - `ambient` → PRESENCE at 30%, TREBLE at 40%
 - `blues` → MID at 75%
 - Default all others to 50%
-This is cosmetic only — knobs are not interactive yet.
+  This is cosmetic only — knobs are not interactive yet.
 
 ---
 
@@ -229,6 +251,7 @@ This is cosmetic only — knobs are not interactive yet.
 SVG component. Props: `theme: AmpTheme`
 
 ### Structure (SVG, roughly 600x380):
+
 - Outer rectangle: same tolex color as head, rounded corners, drop shadow
 - Corner screws: 4 screws
 - Inner grille frame: inset rectangle with slight border
@@ -250,6 +273,7 @@ SVG component. Props: `theme: AmpTheme`
 SVG component. Props: `label: string`, `value: number` (0–1), `theme: AmpTheme`
 
 ### Structure:
+
 - Outer circle: knob body color from theme, subtle radial gradient for 3D effect
 - Indicator line: thin line from center pointing toward value position
   - 0 = 7 o'clock position, 1 = 5 o'clock position (standard amp knob range)
@@ -262,6 +286,7 @@ SVG component. Props: `label: string`, `value: number` (0–1), `theme: AmpTheme
 ## Updated: `src/pages/LibraryPage.tsx` — Full Redesign
 
 ### Layout:
+
 ```
 <div class="flex h-screen overflow-hidden">
   <Sidebar />
@@ -281,6 +306,7 @@ SVG component. Props: `label: string`, `value: number` (0–1), `theme: AmpTheme
 ```
 
 ### Tone list (right panel):
+
 - Compact horizontal list items, not cards
 - Each item: tone name (bold), tags as small pills, created date
 - Selected tone: highlighted with accent left border + subtle accent background
@@ -288,6 +314,7 @@ SVG component. Props: `label: string`, `value: number` (0–1), `theme: AmpTheme
 - Hover: subtle background highlight
 
 ### Mobile:
+
 - AmpDisplay stacked above tone list
 - AmpDisplay is shorter on mobile (scale down SVG viewBox)
 - Tone list scrolls below
@@ -309,11 +336,13 @@ Extract filter pill bar from LibraryPage into its own component.
 ## Responsive Breakpoints
 
 Use Tailwind breakpoints consistently:
+
 - `sm`: 640px — mobile adjustments
 - `lg`: 1024px — sidebar behavior switches, amp/list split view appears
 - `xl`: 1280px — wider amp display
 
 On mobile (`< lg`):
+
 - Sidebar hidden, hamburger shown
 - Layout stacks vertically: amp on top, list below
 - AmpDisplay SVG scales to fit width (use `viewBox` + `width="100%"`)
@@ -325,17 +354,18 @@ On mobile (`< lg`):
 
 All animations use Framer Motion:
 
-| Element | Animation |
-|---|---|
-| Amp swap | Fade + scale (AnimatePresence, mode="wait") |
-| Sidebar drawer (mobile) | Slide in from left (x: -300 → 0) |
-| Tone list items | Stagger fade in on initial load (0.05s delay per item) |
-| Filter pill active state | Layout animation (Framer Motion `layout` prop) |
-| LED power indicator | CSS keyframe pulse (no Framer Motion needed) |
+| Element                  | Animation                                              |
+| ------------------------ | ------------------------------------------------------ |
+| Amp swap                 | Fade + scale (AnimatePresence, mode="wait")            |
+| Sidebar drawer (mobile)  | Slide in from left (x: -300 → 0)                       |
+| Tone list items          | Stagger fade in on initial load (0.05s delay per item) |
+| Filter pill active state | Layout animation (Framer Motion `layout` prop)         |
+| LED power indicator      | CSS keyframe pulse (no Framer Motion needed)           |
 
 ---
 
 ## Design Rules
+
 - No new colors beyond the 4 amp themes
 - Amp SVG must look realistic — use gradients, shadows, and layering
 - Tone title on faceplate: font-display uppercase, sized to fit, never overflow (use SVG `textLength` or truncate)
