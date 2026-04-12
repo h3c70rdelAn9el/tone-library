@@ -6,6 +6,7 @@ import AmpDisplay from '../components/AmpDisplay';
 import {
   deleteTone as deleteToneRemote,
   toggleFavorite as toggleFavoriteRemote,
+  tryFetchAllTones,
 } from '../services/toneService';
 import { useAuth } from '../context/AuthContext';
 import TagBadge from '../components/TagBadge';
@@ -48,6 +49,7 @@ export default function ToneDetailPage() {
   const isGuest = !authLoading && !user;
 
   const tone = useToneStore((s) => (id ? s.getToneById(id) : undefined));
+  const setTones = useToneStore((s) => s.setTones);
   const deleteToneLocal = useToneStore((s) => s.deleteTone);
   const toggleFavoriteLocal = useToneStore((s) => s.toggleFavorite);
   const clearFilters = useToneStore((s) => s.clearFilters);
@@ -60,6 +62,20 @@ export default function ToneDetailPage() {
   useEffect(() => {
     if (tone) selectTone(tone);
   }, [tone, selectTone]);
+
+  /** Library/Favorites run `useTones`; opening `/tone/:id` directly does not. Refetch so the store (and ampStyle) match the server in production. */
+  useEffect(() => {
+    if (authLoading || !user) return;
+    let cancelled = false;
+    void (async () => {
+      const list = await tryFetchAllTones();
+      if (cancelled || list === null) return;
+      setTones(list);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [id, user, authLoading, setTones]);
 
   if (!tone) {
     return (
