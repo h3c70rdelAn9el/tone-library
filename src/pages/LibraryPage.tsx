@@ -12,6 +12,8 @@ import AmpDisplay from '../components/AmpDisplay';
 import { X } from 'lucide-react';
 
 export default function LibraryPage() {
+  // For mobile accordion
+  const [mobileSection, setMobileSection] = useState<'amp' | 'tones'>('tones');
   const searchQuery = useToneStore((s) => s.searchQuery);
   const activeTags = useToneStore((s) => s.activeTags);
   const setSearchQuery = useToneStore((s) => s.setSearchQuery);
@@ -80,7 +82,48 @@ export default function LibraryPage() {
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
+      {/* Mobile Accordion */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:hidden">
+        <div className="flex">
+          <button
+            className={`flex-1 py-2 font-semibold text-lg border-b-2 transition-colors ${mobileSection === 'amp' ? 'border-brand-border text-brand-text' : 'border-transparent text-brand-subtext'}`}
+            onClick={() => setMobileSection('amp')}>
+            Amp
+          </button>
+          <button
+            className={`flex-1 py-2 font-semibold text-lg border-b-2 transition-colors ${mobileSection === 'tones' ? 'border-brand-border text-brand-text' : 'border-transparent text-brand-subtext'}`}
+            onClick={() => setMobileSection('tones')}>
+            Tones
+          </button>
+        </div>
+        {mobileSection === 'amp' && (
+          <div className="flex-1 flex items-center justify-center px-4 py-6 min-h-0">
+            <AmpDisplay tone={selectedTone} />
+          </div>
+        )}
+        {mobileSection === 'tones' && (
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
+            {loading ? (
+              <LoadingState />
+            ) : tones.length === 0 ? (
+              <EmptyState message="No tones match your search." />
+            ) : (
+              <div className="flex max-w-xl flex-col gap-2">
+                {tones.map((tone, i) => (
+                  <ToneCard
+                    key={tone.id}
+                    tone={tone}
+                    index={i}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Side-by-Side */}
+      <div className="hidden min-h-0 flex-1 lg:flex lg:flex-row overflow-y-auto">
         <div className="flex shrink-0 items-center justify-center border-b border-brand-border px-4 py-6 lg:w-1/2 lg:border-b-0 lg:border-r lg:py-8 xl:w-3/5 min-h-0">
           <AmpDisplay tone={selectedTone} />
         </div>
