@@ -101,7 +101,7 @@ export const useToneStore = create<ToneStore>()(
       },
     }),
     {
-      name: 'ToneForge',
+      name: 'ToneVault',
       partialize: (state) => ({
         tones: state.tones,
         syncStatus: state.syncStatus,

@@ -1,4 +1,4 @@
-# 🎸 ToneForge — Phase 2 Cursor Instructions
+# 🎸 ToneVault — Phase 2 Cursor Instructions
 
 ## Goal
 
@@ -89,7 +89,7 @@ Store actions:
 Persistence:
 
 - Use Zustand `persist` middleware
-- Storage key: `"ToneForge"`
+- Storage key: `"ToneVault"`
 - Only persist the `tones` array, not any derived state
 
 Seeding logic:

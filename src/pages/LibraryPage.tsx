@@ -78,7 +78,7 @@ export default function LibraryPage() {
       <div className="shrink-0 border-b border-brand-border px-4 py-4 lg:px-8 lg:py-6">
         <div className="mb-4">
           <h1 className="mb-1 font-display-heading text-3xl font-semibold text-brand-text lg:text-4xl">
-            ToneForge
+            ToneVault
           </h1>
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
             <p className="text-sm text-brand-subtext">{subheading}</p>

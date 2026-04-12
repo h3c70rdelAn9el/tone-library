@@ -1,4 +1,4 @@
-# 🎸 ToneForge — Phase 6b Cursor Instructions
+# 🎸 ToneVault — Phase 6b Cursor Instructions
 
 ## Guest Mode + Sign In Button
 

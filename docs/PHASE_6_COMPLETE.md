@@ -1,4 +1,4 @@
-# 🎸 ToneForge — Phase 6 Complete
+# 🎸 ToneVault — Phase 6 Complete
 
 ## Google Auth + Guest Mode
 

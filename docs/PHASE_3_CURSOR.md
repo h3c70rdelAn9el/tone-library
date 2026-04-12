@@ -1,4 +1,4 @@
-# 🎸 ToneForge — Phase 3 Cursor Instructions
+# 🎸 ToneVault — Phase 3 Cursor Instructions
 
 ## Goal
 
@@ -9,7 +9,7 @@ Connect the app to Supabase for real persistent storage. Tone metadata goes into
 ## Step 1 — Create Supabase Project (do this manually before running Cursor)
 
 1. Go to https://supabase.com and create a new project
-2. Name it `ToneForge`
+2. Name it `ToneVault`
 3. Choose a region close to you
 4. Save your database password somewhere safe
 5. Once created, go to **Project Settings → API**
