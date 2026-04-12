@@ -117,7 +117,7 @@ export default function ToneDetailPage() {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="flex h-screen min-h-0 flex-1 flex-col overflow-hidden">
       <div className="shrink-0 border-b border-brand-border px-4 py-5 lg:px-8 lg:py-6">
         <button
           type="button"
@@ -159,9 +159,9 @@ export default function ToneDetailPage() {
         <p className="font-body text-xs text-brand-muted">Added {tone.createdAt}</p>
       </div>
 
-      {/* Amp first so it is visible without hunting past a flex-1 detail pane (fixes “missing” amp on narrow viewports). lg+: amp left, detail right. */}
+      {/* Match LibraryPage: h-screen so this column gets a real height inside the route outlet (h-full alone often collapses → no amp). */}
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
-        <div className="flex w-full shrink-0 flex-col items-center justify-center border-b border-brand-border px-4 py-8 lg:min-h-0 lg:w-1/2 lg:overflow-y-auto lg:border-b-0 lg:border-r lg:py-10 xl:w-3/5">
+        <div className="flex w-full shrink-0 flex-col items-center justify-center px-4 py-8 lg:min-h-0 lg:w-1/2 lg:border-r lg:border-brand-border lg:py-10 xl:w-3/5 lg:overflow-y-auto">
           <AmpDisplay tone={tone} />
         </div>
 
