@@ -1,12 +1,4 @@
-      keyframes: {
-        'subtle-pulse': {
-          '0%, 100%': { opacity: '1' },
-          '50%': { opacity: '0.45' },
-        },
-      },
-      animation: {
-        'subtle-pulse': 'subtle-pulse 2.2s ease-in-out infinite',
-      },
+      // Removed duplicate subtle-pulse animation definition to fix PostCSS syntax error
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
