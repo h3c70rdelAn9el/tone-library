@@ -1,10 +1,10 @@
-import type { Tone } from '../types/tone';
+import type { ToneCard } from '../types/tone';
 import type { AmpTheme } from '../lib/ampThemes';
 import { deriveKnobValues } from '../lib/ampThemes';
 import AmpKnob from './AmpKnob';
 
 type AmpHeadProps = {
-  tone: Tone;
+  tone: ToneCard;
   theme: AmpTheme;
 };
 

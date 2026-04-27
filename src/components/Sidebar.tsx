@@ -27,9 +27,10 @@ function NavItems({
   variant: 'desktop' | 'drawer';
 }) {
   const totalTones = useToneStore((s) => s.tones.length);
-  const favoriteCount = useToneStore(
-    (s) => s.tones.filter((t) => t.favorite).length,
-  );
+  const favoriteCount = useToneStore((s) => {
+    const ids = new Set(s.tones.map((t) => t.id));
+    return s.favoriteToneIds.filter((id) => ids.has(id)).length;
+  });
 
   const labelClass =
     variant === 'drawer'

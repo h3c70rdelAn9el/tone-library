@@ -15,9 +15,10 @@ export default function FavoritesPage() {
   const searchQuery = useToneStore((s) => s.searchQuery);
   const activeTags = useToneStore((s) => s.activeTags);
   const setSearchQuery = useToneStore((s) => s.setSearchQuery);
-  const totalFavorites = useToneStore((s) =>
-    s.tones.filter((t) => t.favorite).length,
-  );
+  const totalFavorites = useToneStore((s) => {
+    const ids = new Set(s.tones.map((t) => t.id));
+    return s.favoriteToneIds.filter((id) => ids.has(id)).length;
+  });
 
   const { selectedTone, selectTone } = useSelectedTone();
   useTagList();

@@ -2,36 +2,43 @@ import { describe, expect, it } from 'vitest';
 import {
   AMP_STYLE_OPTIONS,
   buildUploadPreviewTone,
-  uniqueTagsFromTones,
+  uniqueGenreTagsFromTones,
 } from './toneForm';
-import type { Tone } from '../types/tone';
+import type { ToneCard } from '../types/tone';
 
-const tone = (overrides: Partial<Tone> = {}): Tone => ({
+const tone = (overrides: Partial<ToneCard> = {}): ToneCard => ({
   id: '1',
   name: 'T',
-  tags: ['a', 'b'],
-  notes: '',
+  genreTags: ['a', 'b'],
   namFile: '',
   irFile: '',
-  namFileURL: null,
-  irFileURL: null,
+  namFileUrl: null,
+  irFileUrl: null,
+  gain: null,
+  bass: null,
+  mid: null,
+  treble: null,
+  presence: null,
+  tightness: null,
+  clarity: null,
+  noiseLevel: null,
   createdAt: '2025-01-01',
-  favorite: false,
+  updatedAt: '2025-01-01T00:00:00.000Z',
   ...overrides,
 });
 
-describe('uniqueTagsFromTones', () => {
+describe('uniqueGenreTagsFromTones', () => {
   it('returns sorted unique tags across tones', () => {
     expect(
-      uniqueTagsFromTones([
-        tone({ tags: ['metal', 'clean'] }),
-        tone({ tags: ['metal', 'ambient'] }),
+      uniqueGenreTagsFromTones([
+        tone({ genreTags: ['metal', 'clean'] }),
+        tone({ genreTags: ['metal', 'ambient'] }),
       ]),
     ).toEqual(['ambient', 'clean', 'metal']);
   });
 
   it('returns empty array for no tones', () => {
-    expect(uniqueTagsFromTones([])).toEqual([]);
+    expect(uniqueGenreTagsFromTones([])).toEqual([]);
   });
 });
 
@@ -39,32 +46,32 @@ describe('buildUploadPreviewTone', () => {
   it('uses placeholder name when empty', () => {
     const t = buildUploadPreviewTone({
       name: '   ',
-      tags: [],
-      notes: '',
+      genreTags: [],
+      description: '',
+      mixNotes: '',
       namFile: '',
       irFile: '',
-      favorite: false,
       ampStyle: 'modern-black',
     });
     expect(t.name).toBe('Your tone name');
     expect(t.id).toBe('upload-preview');
   });
 
-  it('preserves amp style and tags', () => {
+  it('preserves amp style and genre tags', () => {
     const t = buildUploadPreviewTone({
       name: 'Lead',
-      tags: ['high-gain'],
-      notes: '  note  ',
+      genreTags: ['high-gain'],
+      description: '  why  ',
+      mixNotes: '  how  ',
       namFile: 'x.nam',
       irFile: '',
-      favorite: true,
       ampStyle: 'british-gold',
     });
     expect(t.name).toBe('Lead');
-    expect(t.tags).toEqual(['high-gain']);
-    expect(t.notes).toBe('note');
+    expect(t.genreTags).toEqual(['high-gain']);
+    expect(t.description).toBe('why');
+    expect(t.mixNotes).toBe('how');
     expect(t.namFile).toBe('x.nam');
-    expect(t.favorite).toBe(true);
     expect(t.ampStyle).toBe('british-gold');
   });
 });

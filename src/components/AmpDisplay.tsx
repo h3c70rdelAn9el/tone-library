@@ -1,17 +1,17 @@
-import { AnimatePresence, motion } from 'framer-motion';
-import type { Tone } from '../types/tone';
+import { motion, AnimatePresence } from 'framer-motion';
+import type { ToneCard } from '../types/tone';
 import { resolveAmpTheme } from '../lib/ampThemes';
-import AmpHead from './AmpHead';
 import AmpCabinet from './AmpCabinet';
+import AmpHead from './AmpHead';
 
 type AmpDisplayProps = {
-  tone: Tone | null;
+  tone: ToneCard | null;
 };
 
 export default function AmpDisplay({ tone }: AmpDisplayProps) {
   if (!tone) {
     return (
-      <div className="flex min-h-[200px] w-full max-w-2xl flex-col items-center justify-center rounded-2xl border border-dashed border-brand-border/60 bg-brand-card/30 px-6 py-16 text-center">
+      <div className="flex h-full min-h-[280px] w-full max-w-xl flex-col items-center justify-center gap-4 px-4 text-center">
         <p className="font-body text-sm text-brand-muted">
           Select a tone from the library
         </p>
@@ -22,19 +22,15 @@ export default function AmpDisplay({ tone }: AmpDisplayProps) {
   const theme = resolveAmpTheme(tone);
 
   return (
-    <div className="w-full max-w-2xl">
+    <div className="flex w-full max-w-xl flex-col items-center justify-center gap-4 px-2 py-4 lg:px-6">
       <AnimatePresence mode="wait">
         <motion.div
           key={tone.id}
-          initial={{ opacity: 0, scale: 0.92 }}
+          initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
-          exit={{
-            opacity: 0,
-            scale: 0.95,
-            transition: { duration: 0.25, ease: 'easeIn' },
-          }}
-          transition={{ duration: 0.4, ease: 'easeOut' }}
-          className="flex flex-col"
+          exit={{ opacity: 0, scale: 0.98 }}
+          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          className="flex w-full flex-col items-center gap-3"
         >
           <AmpHead tone={tone} theme={theme} />
           <AmpCabinet theme={theme} />

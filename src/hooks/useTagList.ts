@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { fetchAllTags } from '../services/toneService';
+import { fetchAllGenreTags } from '../services/toneService';
 import { useToneStore } from '../store/useToneStore';
 import { useAuth } from '../context/AuthContext';
 
-function uniqueTagsFromTones(tones: { tags: string[] }[]): string[] {
+function uniqueGenreTagsFromTones(tones: { genreTags: string[] }[]): string[] {
   const set = new Set<string>();
   for (const tone of tones) {
-    for (const tag of tone.tags) {
+    for (const tag of tone.genreTags) {
       set.add(tag);
     }
   }
@@ -33,7 +33,7 @@ export function useTagList() {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const t = await fetchAllTags();
+      const t = await fetchAllGenreTags();
       if (!cancelled) {
         setServerTags(t);
         setLoading(false);
@@ -45,7 +45,7 @@ export function useTagList() {
   }, [user, authLoading]);
 
   const tags = useMemo(() => {
-    const fromStore = uniqueTagsFromTones(storeTones);
+    const fromStore = uniqueGenreTagsFromTones(storeTones);
     const merged = new Set<string>([...serverTags, ...fromStore]);
     return Array.from(merged).sort((a, b) => a.localeCompare(b));
   }, [serverTags, storeTones]);

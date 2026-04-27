@@ -1,10 +1,10 @@
 import { createContext } from 'react';
-import type { Tone } from '../types/tone';
+import type { ToneCard } from '../types/tone';
 
 export type SelectedToneContextValue = {
-  selectedTone: Tone | null;
-  previousTone: Tone | null;
-  selectTone: (tone: Tone) => void;
+  selectedTone: ToneCard | null;
+  previousTone: ToneCard | null;
+  selectTone: (tone: ToneCard) => void;
   clearTone: () => void;
 };
 

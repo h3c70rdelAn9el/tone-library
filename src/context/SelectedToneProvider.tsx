@@ -4,12 +4,12 @@ import {
   useReducer,
   type ReactNode,
 } from 'react';
-import type { Tone } from '../types/tone';
+import type { ToneCard } from '../types/tone';
 import { SelectedToneContext } from './selectedToneContext';
 
-type State = { selected: Tone | null; previous: Tone | null };
+type State = { selected: ToneCard | null; previous: ToneCard | null };
 type Action =
-  | { type: 'select'; tone: Tone }
+  | { type: 'select'; tone: ToneCard }
   | { type: 'clear' };
 
 function reducer(state: State, action: Action): State {
@@ -33,7 +33,7 @@ export function SelectedToneProvider({ children }: { children: ReactNode }) {
     previous: null,
   });
 
-  const selectTone = useCallback((tone: Tone) => {
+  const selectTone = useCallback((tone: ToneCard) => {
     dispatch({ type: 'select', tone });
   }, []);
 

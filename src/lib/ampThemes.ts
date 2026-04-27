@@ -1,5 +1,5 @@
 import type { AmpStyle } from '../types/tone';
-import type { Tone } from '../types/tone';
+import type { ToneCard } from '../types/tone';
 
 export type AmpTheme = {
   body: string;
@@ -50,7 +50,7 @@ export const AMP_THEMES: Record<AmpStyle, AmpTheme> = {
   },
 };
 
-export function resolveAmpTheme(tone: Tone): AmpTheme {
+export function resolveAmpTheme(tone: ToneCard): AmpTheme {
   const key = tone.ampStyle ?? 'modern-black';
   return AMP_THEMES[key] ?? AMP_THEMES['modern-black'];
 }
@@ -64,32 +64,43 @@ export type KnobValues = {
   volume: number;
 };
 
-/** Cosmetic knob positions derived from tags (0–1). */
-export function deriveKnobValues(tone: Tone): KnobValues {
-  const tags = new Set(tone.tags.map((t) => t.toLowerCase()));
-  const v: KnobValues = {
-    gain: 0.5,
-    bass: 0.5,
-    mid: 0.5,
-    treble: 0.5,
-    presence: 0.5,
-    volume: 0.5,
+/** Stored EQ / presence use 0–10; knob UI uses 0–1. When unset, fall back to genre-tag hints (cosmetic). */
+export function deriveKnobValues(tone: ToneCard): KnobValues {
+  const tags = new Set(tone.genreTags.map((t) => t.toLowerCase()));
+  const neutral = 0.5;
+  const fromTag: KnobValues = {
+    gain: neutral,
+    bass: neutral,
+    mid: neutral,
+    treble: neutral,
+    presence: neutral,
+    volume: neutral,
   };
 
-  if (tags.has('high-gain')) v.gain = 0.85;
+  if (tags.has('high-gain')) fromTag.gain = 0.85;
   if (tags.has('metal') || tags.has('djent')) {
-    v.treble = 0.7;
-    v.bass = 0.6;
+    fromTag.treble = 0.7;
+    fromTag.bass = 0.6;
   }
   if (tags.has('clean')) {
-    v.gain = 0.2;
-    v.volume = 0.6;
+    fromTag.gain = 0.2;
+    fromTag.volume = 0.6;
   }
   if (tags.has('ambient')) {
-    v.presence = 0.3;
-    v.treble = 0.4;
+    fromTag.presence = 0.3;
+    fromTag.treble = 0.4;
   }
-  if (tags.has('blues')) v.mid = 0.75;
+  if (tags.has('blues')) fromTag.mid = 0.75;
 
-  return v;
+  const scale = (n: number | null, fallback: number) =>
+    n == null ? fallback : Math.min(1, Math.max(0, n / 10));
+
+  return {
+    gain: scale(tone.gain, fromTag.gain),
+    bass: scale(tone.bass, fromTag.bass),
+    mid: scale(tone.mid, fromTag.mid),
+    treble: scale(tone.treble, fromTag.treble),
+    presence: scale(tone.presence, fromTag.presence),
+    volume: fromTag.volume,
+  };
 }

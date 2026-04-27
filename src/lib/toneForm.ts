@@ -1,10 +1,10 @@
-import type { AmpStyle, Tone } from '../types/tone';
+import type { AmpStyle, ToneCard } from '../types/tone';
 
-/** Sorted unique tags from existing tones (for upload suggestions). */
-export function uniqueTagsFromTones(tones: Tone[]): string[] {
+/** Sorted unique genre tags from existing tones (for upload suggestions). */
+export function uniqueGenreTagsFromTones(tones: ToneCard[]): string[] {
   const set = new Set<string>();
   for (const tone of tones) {
-    for (const tag of tone.tags) {
+    for (const tag of tone.genreTags) {
       set.add(tag);
     }
   }
@@ -13,29 +13,39 @@ export function uniqueTagsFromTones(tones: Tone[]): string[] {
 
 export type UploadPreviewInput = {
   name: string;
-  tags: string[];
-  notes: string;
+  genreTags: string[];
+  description: string;
+  mixNotes: string;
   namFile: string;
   irFile: string;
-  favorite: boolean;
   ampStyle: AmpStyle;
 };
 
 const PREVIEW_ID = 'upload-preview';
 
 /** Synthetic tone for amp preview on the upload screen (not persisted). */
-export function buildUploadPreviewTone(input: UploadPreviewInput): Tone {
+export function buildUploadPreviewTone(input: UploadPreviewInput): ToneCard {
   return {
     id: PREVIEW_ID,
     name: input.name.trim() || 'Your tone name',
-    tags: input.tags,
-    notes: input.notes.trim(),
+    genreTags: input.genreTags,
+    description: input.description.trim() || undefined,
+    mixNotes: input.mixNotes.trim() || undefined,
     namFile: input.namFile || '',
     irFile: input.irFile || '',
-    namFileURL: null,
-    irFileURL: null,
+    namFileUrl: null,
+    irFileUrl: null,
+    gain: null,
+    bass: null,
+    mid: null,
+    treble: null,
+    presence: null,
+    playStyle: undefined,
+    tightness: null,
+    clarity: null,
+    noiseLevel: null,
     createdAt: new Date().toISOString().slice(0, 10),
-    favorite: input.favorite,
+    updatedAt: new Date().toISOString(),
     ampStyle: input.ampStyle,
   };
 }
