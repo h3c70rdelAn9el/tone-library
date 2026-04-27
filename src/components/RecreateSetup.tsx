@@ -72,7 +72,7 @@ export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
             id="recreate-title"
             className="font-display-heading text-lg font-semibold text-brand-text"
           >
-            Recreate tone
+            Adapt tone
           </h2>
           <button
             type="button"
@@ -94,6 +94,12 @@ export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
 
           {!result ? (
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+              <div className="mb-4 text-xs text-brand-muted">
+                Based on: {tone.name}
+                {tone.tuning ? ` · Tuning: ${tone.tuning}` : ''}
+                {tone.guitarType ? ` · ${tone.guitarType}` : ''}
+              </div>
+
               <div className="flex flex-col gap-1.5">
                 <label
                   htmlFor="recreate-tuning"
@@ -225,6 +231,13 @@ function RecreateResultView({
         <p className="mt-1 font-display-heading text-5xl font-semibold tabular-nums leading-none text-brand-accent">
           {result.compatibility}
           <span className="text-2xl font-semibold text-brand-accent/80">%</span>
+        </p>
+        <p className="mb-2 mt-3 text-sm text-brand-muted">
+          {result.compatibility > 80
+            ? 'Very likely to translate well to your setup'
+            : result.compatibility > 50
+              ? 'Will need some adjustment'
+              : 'Significant tone shift expected'}
         </p>
         <p className="mt-4 font-display text-base font-semibold text-brand-text">
           {result.confidence.label}

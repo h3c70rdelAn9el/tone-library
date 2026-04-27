@@ -292,13 +292,23 @@ export default function ToneDetailPage() {
             </div>
 
             <div className="mb-8">
+              {(tone.tuning || tone.guitarType) ? (
+                <div className="mb-2 flex flex-wrap gap-2 text-xs text-brand-muted">
+                  {tone.tuning ? (
+                    <span>🎸 {tone.tuning}</span>
+                  ) : null}
+                  {tone.guitarType ? (
+                    <span>⚡ {tone.guitarType}</span>
+                  ) : null}
+                </div>
+              ) : null}
               <button
                 type="button"
                 onClick={() => setRecreateOpen(true)}
                 className="btn-secondary flex items-center gap-2 bg-brand-card/40"
               >
                 <Sparkles size={14} />
-                Recreate tone
+                Adapt tone
               </button>
             </div>
 
