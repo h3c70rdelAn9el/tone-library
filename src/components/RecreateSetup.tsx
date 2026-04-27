@@ -1,11 +1,11 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import type { GuitarType, PickupPosition, ToneCard } from '../types/tone';
 import {
   recreateTone,
   type RecreateResult,
   type UserSetup,
 } from '../lib/recreateTone';
-import { X } from 'lucide-react';
+import { X, Sparkles } from 'lucide-react';
 
 const TUNING_OPTIONS = [
   { value: 'Standard', label: 'Standard (E A D G B E)' },
@@ -22,26 +22,9 @@ const GUITAR_TYPES: { value: GuitarType; label: string }[] = [
   { value: 'active', label: 'Active' },
 ];
 
-function resolveInitialTuning(t: ToneCard): string {
-  const raw = t.tuning?.trim();
-  if (!raw) return TUNING_OPTIONS[0].value;
-  const match = TUNING_OPTIONS.find(
-    (o) => o.value.toLowerCase() === raw.toLowerCase(),
-  );
-  return match ? match.value : raw;
-}
-
-function buildTuningSelectOptions(tone: ToneCard) {
-  const raw = tone.tuning?.trim();
-  if (!raw) return TUNING_OPTIONS;
-  const inPreset = TUNING_OPTIONS.some(
-    (o) => o.value.toLowerCase() === raw.toLowerCase(),
-  );
-  if (inPreset) return TUNING_OPTIONS;
-  return [
-    { value: raw, label: `${raw} (from tone)` },
-    ...TUNING_OPTIONS,
-  ];
+/** Exact string from the tone when present; otherwise empty (user types or picks a hint). */
+function initialTuningFromTone(t: ToneCard): string {
+  return t.tuning?.trim() ?? '';
 }
 
 type RecreateSetupProps = {
@@ -49,29 +32,32 @@ type RecreateSetupProps = {
   onClose: () => void;
 };
 
+const inputClass =
+  'rounded-xl border border-brand-border bg-brand-card px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted focus:border-brand-accent/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/20';
+
 export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
-  const [tuning, setTuning] = useState(() => resolveInitialTuning(tone));
-  const [guitarType, setGuitarType] = useState<GuitarType>(
-    () => tone.guitarType ?? 'humbucker',
+  const [tuning, setTuning] = useState(() => initialTuningFromTone(tone));
+  const [guitarType, setGuitarType] = useState<GuitarType | ''>(
+    () => tone.guitarType ?? '',
   );
   const [pickupPosition, setPickupPosition] = useState<PickupPosition | ''>(
     () => tone.pickupPosition ?? '',
   );
   const [result, setResult] = useState<RecreateResult | null>(null);
 
-  const tuningOptions = useMemo(() => buildTuningSelectOptions(tone), [tone.tuning]);
-
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     const setup: UserSetup = {
       tuning,
-      guitarType,
+      guitarType: guitarType || undefined,
       pickupPosition: pickupPosition || undefined,
     };
     setResult(recreateTone(tone, setup));
   };
 
-  const resetToForm = () => setResult(null);
+  const resetToForm = () => {
+    setResult(null);
+  };
 
   return (
     <div
@@ -101,32 +87,43 @@ export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
         <div className="p-5">
           <p className="mb-4 text-sm text-brand-subtext">
             Adapt <span className="font-medium text-brand-text">{tone.name}</span>{' '}
-            to your guitar. Rule-based hints only — no server calls. Fields use this
-            tone’s setup when present; change anything that differs on your rig.
+            to your guitar. Rule-based hints only — no server calls. Values start from
+            this tone when it has them; everything stays editable — nothing is locked to
+            the card.
           </p>
 
           {!result ? (
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wide text-brand-subtext">
-                  Tuning
+                <label
+                  htmlFor="recreate-tuning"
+                  className="text-xs font-semibold uppercase tracking-wide text-brand-subtext"
+                >
+                  Your tuning
                 </label>
-                <select
+                <input
+                  id="recreate-tuning"
+                  list="recreate-tuning-presets"
                   value={tuning}
                   onChange={(e) => setTuning(e.target.value)}
-                  className="rounded-xl border border-brand-border bg-brand-card px-4 py-2.5 text-sm text-brand-text focus:border-brand-accent/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
-                >
-                  {tuningOptions.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
+                  placeholder="Type any tuning, or pick a hint below"
+                  autoComplete="off"
+                  className={inputClass}
+                />
+                <datalist id="recreate-tuning-presets">
+                  {TUNING_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value} label={o.label} />
                   ))}
-                </select>
+                </datalist>
+                <p className="text-[11px] text-brand-muted">
+                  Prefills from the tone when saved there; override to match your
+                  instrument.
+                </p>
               </div>
 
               <div className="flex flex-col gap-2">
                 <span className="text-xs font-semibold uppercase tracking-wide text-brand-subtext">
-                  Guitar type
+                  Your guitar type
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {GUITAR_TYPES.map(({ value, label }) => (
@@ -144,6 +141,21 @@ export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
                     </button>
                   ))}
                 </div>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <button
+                    type="button"
+                    onClick={() => setGuitarType('')}
+                    className="text-[11px] text-brand-muted underline decoration-brand-border underline-offset-2 hover:text-brand-text"
+                  >
+                    Not sure — skip
+                  </button>
+                  <span className="text-[11px] text-brand-muted">
+                    We still analyze; certainty takes a hit.
+                  </span>
+                </div>
+                <p className="text-[11px] text-brand-muted">
+                  Prefills from the tone when set; change to match what you are playing.
+                </p>
               </div>
 
               <div className="flex flex-col gap-1.5">
@@ -158,13 +170,16 @@ export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
                   onChange={(e) =>
                     setPickupPosition((e.target.value || '') as PickupPosition | '')
                   }
-                  className="rounded-xl border border-brand-border bg-brand-card px-4 py-2.5 text-sm text-brand-text focus:border-brand-accent/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
+                  className={inputClass}
                 >
                   <option value="">—</option>
                   <option value="neck">Neck</option>
                   <option value="middle">Middle</option>
                   <option value="bridge">Bridge</option>
                 </select>
+                <p className="text-[11px] text-brand-muted">
+                  Optional; prefills from the tone when set. Clear or change anytime.
+                </p>
               </div>
 
               <div className="flex flex-wrap gap-3 pt-1">
@@ -177,29 +192,7 @@ export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
               </div>
             </form>
           ) : (
-            <div className="flex flex-col gap-6">
-              <div>
-                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-brand-muted">
-                  Compatibility
-                </p>
-                <p className="font-display-heading text-4xl font-semibold tabular-nums text-brand-accent">
-                  {result.compatibility}%
-                </p>
-              </div>
-
-              <ResultSection title="Adjustments" items={result.adjustments} />
-              <ResultSection title="Warnings" items={result.warnings} />
-              <ResultSection title="Notes" items={result.notes} emptyHint="None" />
-
-              <div className="flex flex-wrap gap-3 pt-2">
-                <button type="button" onClick={resetToForm} className="btn-secondary">
-                  Adjust setup
-                </button>
-                <button type="button" onClick={onClose} className="btn-primary">
-                  Done
-                </button>
-              </div>
-            </div>
+            <RecreateResultView result={result} onBack={resetToForm} onClose={onClose} />
           )}
         </div>
       </div>
@@ -207,29 +200,103 @@ export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
   );
 }
 
-function ResultSection({
-  title,
-  items,
-  emptyHint,
+function RecreateResultView({
+  result,
+  onBack,
+  onClose,
 }: {
-  title: string;
-  items: string[];
-  emptyHint?: string;
+  result: RecreateResult;
+  onBack: () => void;
+  onClose: () => void;
 }) {
+  const hasAdjustments = result.adjustments.length > 0;
+  const hasWarnings = result.warnings.length > 0;
+
   return (
-    <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-brand-muted">
-        {title}
-      </p>
-      {items.length === 0 ? (
-        <p className="text-sm text-brand-muted">{emptyHint ?? '—'}</p>
+    <div className="flex flex-col gap-6">
+      <div className="relative overflow-hidden rounded-2xl border border-brand-accent/25 bg-gradient-to-br from-brand-accent/[0.12] via-brand-card to-brand-surface/90 px-5 py-6">
+        <Sparkles
+          className="absolute right-4 top-4 h-8 w-8 text-brand-accent/35"
+          aria-hidden
+        />
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-muted">
+          Transfer likelihood
+        </p>
+        <p className="mt-1 font-display-heading text-5xl font-semibold tabular-nums leading-none text-brand-accent">
+          {result.compatibility}
+          <span className="text-2xl font-semibold text-brand-accent/80">%</span>
+        </p>
+        <p className="mt-4 font-display text-base font-semibold text-brand-text">
+          {result.confidence.label}
+        </p>
+        <p className="mt-2 text-sm leading-relaxed text-brand-subtext">
+          {result.confidence.blurb}
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        {result.insights.map((line, i) => (
+          <blockquote
+            key={i}
+            className="border-l-[3px] border-brand-accent/60 bg-brand-card/40 py-3 pl-4 pr-3 text-[15px] leading-relaxed text-brand-text"
+          >
+            {line}
+          </blockquote>
+        ))}
+      </div>
+
+      {hasAdjustments ? (
+        <div className="rounded-xl border border-brand-border/80 bg-brand-card/30 px-4 py-4">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-muted">
+            First moves we would try
+          </p>
+          <ul className="mt-3 space-y-2.5 text-sm leading-snug text-brand-text">
+            {result.adjustments.map((item) => (
+              <li key={item} className="flex gap-2">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-accent" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : (
-        <ul className="list-inside list-disc space-y-1 text-sm text-brand-text">
-          {items.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
+        <p className="text-sm italic text-brand-subtext">
+          No specific EQ moves flagged — your setup already lines up with the card.
+        </p>
       )}
+
+      {hasWarnings ? (
+        <div
+          className="rounded-xl border border-amber-500/25 bg-amber-500/[0.07] px-4 py-4"
+          role="status"
+        >
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-200/90">
+            Heads up
+          </p>
+          <ul className="mt-2.5 space-y-2 text-sm leading-relaxed text-amber-100/95">
+            {result.warnings.map((w) => (
+              <li key={w}>{w}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {result.notes.length > 0 ? (
+        <div className="text-sm text-brand-muted">
+          {result.notes.map((n) => (
+            <p key={n}>{n}</p>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="flex flex-wrap gap-3 border-t border-brand-border/60 pt-5">
+        <button type="button" onClick={onBack} className="btn-secondary">
+          Tweak setup
+        </button>
+        <button type="button" onClick={onClose} className="btn-primary">
+          Done
+        </button>
+      </div>
     </div>
   );
 }

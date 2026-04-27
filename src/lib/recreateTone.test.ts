@@ -30,6 +30,24 @@ describe('recreateTone', () => {
     });
     expect(r.compatibility).toBe(100);
     expect(r.adjustments).toHaveLength(0);
+    expect(r.insights.length).toBeGreaterThanOrEqual(1);
+    expect(r.confidence.label).toBeTruthy();
+  });
+
+  it('applies -15 and warning when user guitar type is missing', () => {
+    const r = recreateTone(baseTone(), { tuning: 'Standard' });
+    expect(r.compatibility).toBe(85);
+    expect(r.warnings).toContain('Missing guitar type reduces accuracy');
+  });
+
+  it('does not apply pickup mismatch when user guitar is missing', () => {
+    const tone: ToneCard = {
+      ...baseTone(),
+      guitarType: 'humbucker',
+    };
+    const r = recreateTone(tone, { tuning: 'Standard' });
+    expect(r.compatibility).toBe(85);
+    expect(r.warnings.some((w) => w.includes('Optimized for'))).toBe(false);
   });
 
   it('applies tuning and guitar penalties', () => {
@@ -70,6 +88,9 @@ describe('recreateTone', () => {
     });
     expect(
       r.adjustments.some((a) => /low-end/i.test(a)),
+    ).toBe(true);
+    expect(
+      r.insights.some((i) => /tighter/i.test(i)),
     ).toBe(true);
   });
 
