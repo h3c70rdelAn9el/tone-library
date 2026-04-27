@@ -32,6 +32,8 @@ type RecreateSetupProps = {
   onClose: () => void;
 };
 
+type RecreateStep = 'setup' | 'result';
+
 const inputClass =
   'rounded-xl border border-brand-border bg-brand-card px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted focus:border-brand-accent/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/20';
 
@@ -43,6 +45,7 @@ export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
   const [pickupPosition, setPickupPosition] = useState<PickupPosition | ''>(
     () => tone.pickupPosition ?? '',
   );
+  const [step, setStep] = useState<RecreateStep>('setup');
   const [result, setResult] = useState<RecreateResult | null>(null);
 
   const handleSubmit = (e: FormEvent) => {
@@ -53,10 +56,12 @@ export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
       pickupPosition: pickupPosition || undefined,
     };
     setResult(recreateTone(tone, setup));
+    setStep('result');
   };
 
-  const resetToForm = () => {
-    setResult(null);
+  /** Refine loop: back to setup with inputs untouched; analyze again to refresh. */
+  const handleRefineSetup = () => {
+    setStep('setup');
   };
 
   return (
@@ -92,8 +97,16 @@ export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
             the card.
           </p>
 
-          {!result ? (
+          {step === 'setup' ? (
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+              {result !== null ? (
+                <p className="mb-1 rounded-lg border border-brand-accent/25 bg-brand-accent/[0.08] px-3 py-2.5 text-xs leading-snug text-brand-subtext">
+                  Adjust your setup below, then tap{' '}
+                  <span className="font-semibold text-brand-text">Analyze</span> again
+                  to refresh the readout — your fields stay as you left them.
+                </p>
+              ) : null}
+
               <div className="mb-4 text-xs text-brand-muted">
                 Based on: {tone.name}
                 {tone.tuning ? ` · Tuning: ${tone.tuning}` : ''}
@@ -190,21 +203,21 @@ export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
 
               <div className="flex flex-wrap gap-3 pt-1">
                 <button type="submit" className="btn-primary">
-                  Analyze
+                  {result !== null ? 'Analyze again' : 'Analyze'}
                 </button>
                 <button type="button" onClick={onClose} className="btn-secondary">
                   Cancel
                 </button>
               </div>
             </form>
-          ) : (
+          ) : result ? (
             <RecreateResultView
               tone={tone}
               result={result}
-              onBack={resetToForm}
+              onRefineSetup={handleRefineSetup}
               onClose={onClose}
             />
-          )}
+          ) : null}
         </div>
       </div>
     </div>
@@ -214,12 +227,12 @@ export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
 function RecreateResultView({
   tone,
   result,
-  onBack,
+  onRefineSetup,
   onClose,
 }: {
   tone: ToneCard;
   result: RecreateResult;
-  onBack: () => void;
+  onRefineSetup: () => void;
   onClose: () => void;
 }) {
   return (
@@ -340,9 +353,13 @@ function RecreateResultView({
         </div>
       ) : null}
 
-      <div className="flex flex-wrap gap-3 border-t border-brand-border/60 pt-5">
-        <button type="button" onClick={onBack} className="btn-secondary">
-          Tweak setup
+      <div className="flex flex-wrap items-center gap-3 border-t border-brand-border/60 pt-5">
+        <button
+          type="button"
+          onClick={onRefineSetup}
+          className="btn-secondary mt-4"
+        >
+          Refine setup →
         </button>
         <button type="button" onClick={onClose} className="btn-primary">
           Done
