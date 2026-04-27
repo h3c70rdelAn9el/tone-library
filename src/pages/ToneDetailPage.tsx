@@ -19,7 +19,9 @@ import {
   Download,
   Trash2,
   Pencil,
+  Sparkles,
 } from 'lucide-react';
+import RecreateSetup from '../components/RecreateSetup';
 
 function downloadBlob(url: string, filename: string) {
   const a = document.createElement('a');
@@ -63,6 +65,7 @@ export default function ToneDetailPage() {
 
   const [favoriteError, setFavoriteError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [recreateOpen, setRecreateOpen] = useState(false);
 
   useEffect(() => {
     if (tone) selectTone(tone);
@@ -288,6 +291,17 @@ export default function ToneDetailPage() {
               </div>
             </div>
 
+            <div className="mb-8">
+              <button
+                type="button"
+                onClick={() => setRecreateOpen(true)}
+                className="btn-secondary flex items-center gap-2 bg-brand-card/40"
+              >
+                <Sparkles size={14} />
+                Recreate tone
+              </button>
+            </div>
+
             {isGuest ? (
               <p className="mb-6 text-sm text-brand-muted">
                 Sign in to manage your tones
@@ -322,6 +336,10 @@ export default function ToneDetailPage() {
           </div>
         </div>
       </div>
+
+      {recreateOpen ? (
+        <RecreateSetup tone={tone} onClose={() => setRecreateOpen(false)} />
+      ) : null}
     </div>
   );
 }
