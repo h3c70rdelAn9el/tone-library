@@ -1,5 +1,10 @@
 import { useState, type FormEvent } from 'react';
-import type { GuitarType, PickupPosition, ToneCard } from '../types/tone';
+import type {
+  GuitarType,
+  PickupPosition,
+  PlayStyle,
+  ToneCard,
+} from '../types/tone';
 import {
   recreateTone,
   type RecreateResult,
@@ -20,6 +25,13 @@ const GUITAR_TYPES: { value: GuitarType; label: string }[] = [
   { value: 'single_coil', label: 'Single coil' },
   { value: 'humbucker', label: 'Humbucker' },
   { value: 'active', label: 'Active' },
+];
+
+const PLAY_STYLES: { value: PlayStyle; label: string }[] = [
+  { value: 'rhythm', label: 'Rhythm' },
+  { value: 'lead', label: 'Lead' },
+  { value: 'ambient', label: 'Ambient' },
+  { value: 'clean', label: 'Clean' },
 ];
 
 /** Exact string from the tone when present; otherwise empty (user types or picks a hint). */
@@ -54,6 +66,10 @@ export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
   const [pickupPosition, setPickupPosition] = useState<PickupPosition | ''>(
     () => tone.pickupPosition ?? '',
   );
+  const [playStyle, setPlayStyle] = useState<PlayStyle | ''>(
+    () => tone.playStyle ?? '',
+  );
+  const [context, setContext] = useState('');
   const [step, setStep] = useState<RecreateStep>('setup');
   const [result, setResult] = useState<RecreateResult | null>(null);
 
@@ -63,6 +79,8 @@ export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
       tuning,
       guitarType: guitarType || undefined,
       pickupPosition: pickupPosition || undefined,
+      playStyle: playStyle || undefined,
+      context: context.trim() || undefined,
     };
     setResult(recreateTone(tone, setup));
     setStep('result');
@@ -102,8 +120,9 @@ export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
           <p className="mb-4 text-sm text-brand-subtext">
             Adapt <span className="font-medium text-brand-text">{tone.name}</span>{' '}
             to your guitar. Rule-based hints only — no server calls. Values start from
-            this tone when it has them; everything stays editable — nothing is locked to
-            the card.
+            this tone when it has them; pick a play style so the readout matches how you
+            will use the sound. Everything stays editable — nothing is locked to the
+            card.
           </p>
 
           {step === 'setup' ? (
@@ -120,6 +139,43 @@ export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
                 Based on: {tone.name}
                 {tone.tuning ? ` · Tuning: ${tone.tuning}` : ''}
                 {tone.guitarType ? ` · ${tone.guitarType}` : ''}
+                {tone.playStyle
+                  ? ` · ${PLAY_STYLES.find((p) => p.value === tone.playStyle)?.label ?? tone.playStyle}`
+                  : ''}
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wide text-brand-subtext">
+                  Your play style
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {PLAY_STYLES.map(({ value, label }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setPlayStyle(value)}
+                      className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                        playStyle === value
+                          ? 'border-brand-accent bg-brand-accent/15 text-brand-accent'
+                          : 'border-brand-border bg-brand-card/60 text-brand-subtext hover:border-brand-accent/35'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <button
+                    type="button"
+                    onClick={() => setPlayStyle('')}
+                    className="text-[11px] text-brand-muted underline decoration-brand-border underline-offset-2 hover:text-brand-text"
+                  >
+                    Clear — no style hint
+                  </button>
+                  <span className="text-[11px] text-brand-muted">
+                    Prefills from the tone when tagged; helps role vs gain hints.
+                  </span>
+                </div>
               </div>
 
               <div className="flex flex-col gap-1.5">
@@ -207,6 +263,31 @@ export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
                 </select>
                 <p className="text-[11px] text-brand-muted">
                   Optional; prefills from the tone when set. Clear or change anytime.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label
+                  htmlFor="recreate-context"
+                  className="text-xs font-semibold uppercase tracking-wide text-brand-subtext"
+                >
+                  Your context{' '}
+                  <span className="font-normal normal-case text-brand-muted">
+                    (optional)
+                  </span>
+                </label>
+                <textarea
+                  id="recreate-context"
+                  value={context}
+                  onChange={(e) => setContext(e.target.value)}
+                  placeholder="Amp model, room, part you’re playing, gig vs bedroom, anything that changes how this should read…"
+                  rows={3}
+                  maxLength={500}
+                  className={`${inputClass} min-h-[88px] resize-y`}
+                />
+                <p className="text-[11px] text-brand-muted">
+                  Shown back in results; a few plain words (e.g. bedroom, live, quiet)
+                  nudge the hint list.
                 </p>
               </div>
 

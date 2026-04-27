@@ -146,4 +146,67 @@ describe('recreateTone', () => {
     });
     expect(r.suggestedTone?.mid).toBe(4.5);
   });
+
+  it('penalizes and warns when user play style differs from tone tag', () => {
+    const tone: ToneCard = {
+      ...baseTone(),
+      playStyle: 'lead',
+    };
+    const r = recreateTone(tone, {
+      tuning: 'Standard',
+      guitarType: 'humbucker',
+      playStyle: 'rhythm',
+    });
+    expect(r.compatibility).toBe(90);
+    expect(
+      r.warnings.some((w) => /lead.*rhythm|rhythm.*lead/i.test(w)),
+    ).toBe(true);
+    expect(
+      r.adjustments.some((a) => /role/i.test(a)),
+    ).toBe(true);
+  });
+
+  it('clean intent on high-gain tone lowers suggested gain and treble', () => {
+    const tone: ToneCard = {
+      ...baseTone(),
+      gain: 7,
+      treble: 6,
+    };
+    const r = recreateTone(tone, {
+      tuning: 'Standard',
+      guitarType: 'humbucker',
+      playStyle: 'clean',
+    });
+    expect(r.compatibility).toBe(95);
+    expect(r.suggestedTone?.gain).toBe(6);
+    expect(r.suggestedTone?.treble).toBe(5.5);
+    expect(r.insights[0]).toMatch(/clean/i);
+  });
+
+  it('lead intent on low-gain tone bumps suggested gain and mid', () => {
+    const tone: ToneCard = {
+      ...baseTone(),
+      gain: 3,
+      mid: 5,
+    };
+    const r = recreateTone(tone, {
+      tuning: 'Standard',
+      guitarType: 'humbucker',
+      playStyle: 'lead',
+    });
+    expect(r.compatibility).toBe(95);
+    expect(r.suggestedTone?.gain).toBe(3.5);
+    expect(r.suggestedTone?.mid).toBe(5.5);
+    expect(r.insights[0]).toMatch(/lead/i);
+  });
+
+  it('echoes setup context in notes and adds home-volume hint for bedroom', () => {
+    const r = recreateTone(baseTone(), {
+      tuning: 'Standard',
+      guitarType: 'humbucker',
+      context: '  Bedroom practice  ',
+    });
+    expect(r.notes.some((n) => /Bedroom practice/.test(n))).toBe(true);
+    expect(r.adjustments.some((a) => /home volume/i.test(a))).toBe(true);
+  });
 });
