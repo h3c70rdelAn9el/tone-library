@@ -7,6 +7,7 @@ import {
   deleteTone as deleteToneRemote,
   toggleFavorite as toggleFavoriteRemote,
   tryFetchAllTones,
+  tryFetchFavoriteToneIds,
 } from '../services/toneService';
 import { useAuth } from '../context/AuthContext';
 import TagBadge from '../components/TagBadge';
@@ -49,7 +50,11 @@ export default function ToneDetailPage() {
   const isGuest = !authLoading && !user;
 
   const tone = useToneStore((s) => (id ? s.getToneById(id) : undefined));
+  const favorited = useToneStore((s) =>
+    id ? s.favoriteToneIds.includes(id) : false,
+  );
   const setTones = useToneStore((s) => s.setTones);
+  const setFavoriteToneIds = useToneStore((s) => s.setFavoriteToneIds);
   const deleteToneLocal = useToneStore((s) => s.deleteTone);
   const toggleFavoriteLocal = useToneStore((s) => s.toggleFavorite);
   const clearFilters = useToneStore((s) => s.clearFilters);
@@ -63,19 +68,21 @@ export default function ToneDetailPage() {
     if (tone) selectTone(tone);
   }, [tone, selectTone]);
 
-  /** Library/Favorites run `useTones`; opening `/tone/:id` directly does not. Refetch so the store (and ampStyle) match the server in production. */
+  /** Library/Favorites run `useTones`; opening `/tone/:id` directly does not. Refetch so the store matches the server in production. */
   useEffect(() => {
     if (authLoading || !user) return;
     let cancelled = false;
     void (async () => {
       const list = await tryFetchAllTones();
-      if (cancelled || list === null) return;
+      const favs = await tryFetchFavoriteToneIds();
+      if (cancelled || list === null || favs === null) return;
       setTones(list);
+      setFavoriteToneIds(favs);
     })();
     return () => {
       cancelled = true;
     };
-  }, [id, user, authLoading, setTones]);
+  }, [id, user, authLoading, setTones, setFavoriteToneIds]);
 
   if (!tone) {
     return (
@@ -108,7 +115,7 @@ export default function ToneDetailPage() {
   const handleFavorite = async () => {
     if (isGuest) return;
     setFavoriteError(null);
-    const ok = await toggleFavoriteRemote(tone.id, tone.favorite);
+    const ok = await toggleFavoriteRemote(tone.id, favorited);
     if (ok) {
       toggleFavoriteLocal(tone.id);
     } else {
@@ -138,12 +145,12 @@ export default function ToneDetailPage() {
                 type="button"
                 onClick={() => void handleFavorite()}
                 className="rounded-md p-1 transition-colors hover:bg-brand-border/40"
-                aria-label={tone.favorite ? 'Remove favorite' : 'Add favorite'}
+                aria-label={favorited ? 'Remove favorite' : 'Add favorite'}
               >
                 <Star
                   size={18}
                   className={
-                    tone.favorite
+                    favorited
                       ? 'fill-brand-accent text-brand-accent'
                       : 'text-brand-subtext'
                   }
@@ -156,10 +163,14 @@ export default function ToneDetailPage() {
           ) : null}
         </div>
 
-        <p className="font-body text-xs text-brand-muted">Added {tone.createdAt}</p>
+        <p className="font-body text-xs text-brand-muted">
+          Added {tone.createdAt}
+          {tone.updatedAt && tone.updatedAt.slice(0, 10) !== tone.createdAt
+            ? ` · Updated ${tone.updatedAt.slice(0, 10)}`
+            : null}
+        </p>
       </div>
 
-      {/* Match LibraryPage: h-screen so this column gets a real height inside the route outlet (h-full alone often collapses → no amp). */}
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
         <div className="flex w-full shrink-0 flex-col items-center justify-center px-4 py-8 lg:min-h-0 lg:w-1/2 lg:border-r lg:border-brand-border lg:py-10 xl:w-3/5 lg:overflow-y-auto">
           <AmpDisplay tone={tone} />
@@ -168,7 +179,7 @@ export default function ToneDetailPage() {
         <div className="w-full min-w-0 shrink-0 px-4 py-6 lg:min-h-0 lg:w-1/2 lg:flex-1 lg:overflow-y-auto lg:py-8 xl:w-2/5">
           <div className="mx-auto w-full max-w-2xl lg:mx-0 lg:max-w-none lg:pr-2">
             <div className="mb-8 flex flex-wrap gap-2">
-              {tone.tags.map((tag) => (
+              {tone.genreTags.map((tag) => (
                 <TagBadge
                   key={tag}
                   tag={tag}
@@ -185,19 +196,34 @@ export default function ToneDetailPage() {
               ))}
             </div>
 
-            <div className="mb-8 rounded-2xl border border-brand-border bg-brand-card p-5">
-              <p className="mb-3 font-body text-xs font-semibold uppercase tracking-wide text-brand-muted">
-                Notes
-              </p>
-              <p className="text-sm leading-relaxed text-brand-text">{tone.notes}</p>
-            </div>
+            {tone.description ? (
+              <div className="mb-8 rounded-2xl border border-brand-border bg-brand-card p-5">
+                <p className="mb-3 font-body text-xs font-semibold uppercase tracking-wide text-brand-muted">
+                  Description
+                </p>
+                <p className="text-sm leading-relaxed text-brand-text">
+                  {tone.description}
+                </p>
+              </div>
+            ) : null}
+
+            {tone.mixNotes ? (
+              <div className="mb-8 rounded-2xl border border-brand-border bg-brand-card p-5">
+                <p className="mb-3 font-body text-xs font-semibold uppercase tracking-wide text-brand-muted">
+                  Mix notes
+                </p>
+                <p className="text-sm leading-relaxed text-brand-text">
+                  {tone.mixNotes}
+                </p>
+              </div>
+            ) : null}
 
             <div className="mb-8 rounded-2xl border border-brand-border bg-brand-card p-5">
               <p className="mb-4 font-body text-xs font-semibold uppercase tracking-wide text-brand-muted">
                 Files
               </p>
               <div className="flex flex-col gap-3">
-                {(tone.namFile || tone.namFileURL) && (
+                {(tone.namFile || tone.namFileUrl) && (
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex min-w-0 items-center gap-3 text-sm text-brand-subtext">
                       <FileAudio size={14} className="shrink-0 text-brand-accent" />
@@ -209,12 +235,12 @@ export default function ToneDetailPage() {
                       <span className="shrink-0 text-xs text-brand-muted">
                         Sign in to download
                       </span>
-                    ) : tone.namFileURL ? (
+                    ) : tone.namFileUrl ? (
                       <button
                         type="button"
                         onClick={() =>
                           openOrDownloadFile(
-                            tone.namFileURL!,
+                            tone.namFileUrl!,
                             tone.namFile || 'tone.nam',
                           )
                         }
@@ -228,7 +254,7 @@ export default function ToneDetailPage() {
                     )}
                   </div>
                 )}
-                {(tone.irFile || tone.irFileURL) && (
+                {(tone.irFile || tone.irFileUrl) && (
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex min-w-0 items-center gap-3 text-sm text-brand-subtext">
                       <Mic2 size={14} className="shrink-0 text-brand-accent" />
@@ -240,12 +266,12 @@ export default function ToneDetailPage() {
                       <span className="shrink-0 text-xs text-brand-muted">
                         Sign in to download
                       </span>
-                    ) : tone.irFileURL ? (
+                    ) : tone.irFileUrl ? (
                       <button
                         type="button"
                         onClick={() =>
                           openOrDownloadFile(
-                            tone.irFileURL!,
+                            tone.irFileUrl!,
                             tone.irFile || 'impulse.wav',
                           )
                         }

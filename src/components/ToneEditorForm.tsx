@@ -10,10 +10,16 @@ import {
   uploadIrFile,
 } from '../services/toneService';
 import { isSupabaseConfigured } from '../lib/supabase';
-import type { AmpStyle, Tone } from '../types/tone';
+import type {
+  AmpStyle,
+  GuitarType,
+  PickupPosition,
+  PlayStyle,
+  ToneCard,
+} from '../types/tone';
 import {
   buildUploadPreviewTone,
-  uniqueTagsFromTones,
+  uniqueGenreTagsFromTones,
 } from '../lib/toneForm';
 import { useFilePickState } from '../hooks/useFilePickState';
 import FileDropRow from './FileDropRow';
@@ -23,9 +29,26 @@ import UploadAmpPreviewPanel from './UploadAmpPreviewPanel';
 import { useAuth } from '../context/AuthContext';
 import { useSelectedTone } from '../hooks/useSelectedTone';
 
+function optionalNum(raw: string): number | null {
+  const t = raw.trim();
+  if (t === '') return null;
+  const n = Number(t);
+  return Number.isFinite(n) ? n : null;
+}
+
+function numToInput(n: number | null): string {
+  return n == null ? '' : String(n);
+}
+
 export type ToneEditorFormProps =
   | { variant: 'create' }
-  | { variant: 'edit'; tone: Tone };
+  | { variant: 'edit'; tone: ToneCard };
+
+const inputClass =
+  'rounded-xl border border-brand-border bg-brand-card px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted transition-colors focus:border-brand-accent/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 disabled:opacity-50';
+
+const labelClass =
+  'text-xs font-body font-semibold uppercase tracking-wide text-brand-subtext';
 
 export default function ToneEditorForm(props: ToneEditorFormProps) {
   const navigate = useNavigate();
@@ -43,10 +66,24 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
   const guestMode = !authLoading && !user;
 
   const [name, setName] = useState('');
-  const [notes, setNotes] = useState('');
+  const [description, setDescription] = useState('');
+  const [mixNotes, setMixNotes] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [favorite, setFavorite] = useState(false);
   const [ampStyle, setAmpStyle] = useState<AmpStyle>('modern-black');
+  const [ampModel, setAmpModel] = useState('');
+  const [gainIn, setGainIn] = useState('');
+  const [bassIn, setBassIn] = useState('');
+  const [midIn, setMidIn] = useState('');
+  const [trebleIn, setTrebleIn] = useState('');
+  const [presenceIn, setPresenceIn] = useState('');
+  const [tuning, setTuning] = useState('');
+  const [guitarType, setGuitarType] = useState<GuitarType | ''>('');
+  const [pickupPosition, setPickupPosition] = useState<PickupPosition | ''>('');
+  const [playStyle, setPlayStyle] = useState<PlayStyle | ''>('');
+  const [tightnessIn, setTightnessIn] = useState('');
+  const [clarityIn, setClarityIn] = useState('');
+  const [noiseLevelIn, setNoiseLevelIn] = useState('');
+
   const [nameError, setNameError] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -59,17 +96,30 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
 
   const formDisabled = uploading || guestMode;
 
-  const availableTags = useMemo(() => uniqueTagsFromTones(tones), [tones]);
+  const availableTags = useMemo(() => uniqueGenreTagsFromTones(tones), [tones]);
 
   /* eslint-disable react-hooks/exhaustive-deps -- hydrate form only when `editSourceId` changes; avoid wiping in-progress edits on store re-renders. */
   useEffect(() => {
     if (props.variant !== 'edit') return;
     const t = props.tone;
     setName(t.name);
-    setNotes(t.notes);
-    setSelectedTags([...t.tags]);
-    setFavorite(t.favorite);
+    setDescription(t.description ?? '');
+    setMixNotes(t.mixNotes ?? '');
+    setSelectedTags([...t.genreTags]);
     setAmpStyle(t.ampStyle ?? 'modern-black');
+    setAmpModel(t.ampModel ?? '');
+    setGainIn(numToInput(t.gain));
+    setBassIn(numToInput(t.bass));
+    setMidIn(numToInput(t.mid));
+    setTrebleIn(numToInput(t.treble));
+    setPresenceIn(numToInput(t.presence));
+    setTuning(t.tuning ?? '');
+    setGuitarType(t.guitarType ?? '');
+    setPickupPosition(t.pickupPosition ?? '');
+    setPlayStyle(t.playStyle ?? '');
+    setTightnessIn(numToInput(t.tightness));
+    setClarityIn(numToInput(t.clarity));
+    setNoiseLevelIn(numToInput(t.noiseLevel));
     setNameError('');
     setSubmitError('');
     setTagInput('');
@@ -82,22 +132,14 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
     () =>
       buildUploadPreviewTone({
         name,
-        tags: selectedTags,
-        notes,
+        genreTags: selectedTags,
+        description,
+        mixNotes,
         namFile: nam.displayName,
         irFile: ir.displayName,
-        favorite,
         ampStyle,
       }),
-    [
-      name,
-      selectedTags,
-      notes,
-      nam.displayName,
-      ir.displayName,
-      favorite,
-      ampStyle,
-    ],
+    [name, selectedTags, description, mixNotes, nam.displayName, ir.displayName, ampStyle],
   );
 
   const addTagString = (raw: string) => {
@@ -151,13 +193,13 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
   };
 
   const resolveNamIrForSave = (): {
-    namFileURL: string | null;
-    irFileURL: string | null;
+    namFileUrl: string | null;
+    irFileUrl: string | null;
     namFile: string;
     irFile: string;
   } => {
     if (isEdit && editTone) {
-      let nextNamUrl: string | null = editTone.namFileURL;
+      let nextNamUrl: string | null = editTone.namFileUrl;
       let nextNamFile = editTone.namFile;
       if (nam.file) {
         nextNamFile = nam.displayName;
@@ -168,7 +210,7 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
         nextNamFile = nam.displayName;
       }
 
-      let nextIrUrl: string | null = editTone.irFileURL;
+      let nextIrUrl: string | null = editTone.irFileUrl;
       let nextIrFile = editTone.irFile;
       if (ir.file) {
         nextIrFile = ir.displayName;
@@ -182,18 +224,46 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
       return {
         namFile: nextNamFile,
         irFile: nextIrFile,
-        namFileURL: nextNamUrl,
-        irFileURL: nextIrUrl,
+        namFileUrl: nextNamUrl,
+        irFileUrl: nextIrUrl,
       };
     }
 
     return {
       namFile: nam.displayName,
       irFile: ir.displayName,
-      namFileURL: null,
-      irFileURL: null,
+      namFileUrl: null,
+      irFileUrl: null,
     };
   };
+
+  const buildBaseCard = (
+    trimmed: string,
+    resolved: ReturnType<typeof resolveNamIrForSave>,
+  ): Omit<ToneCard, 'id' | 'createdAt' | 'updatedAt'> => ({
+    name: trimmed,
+    description: description.trim() || undefined,
+    mixNotes: mixNotes.trim() || undefined,
+    ampModel: ampModel.trim() || undefined,
+    genreTags: selectedTags,
+    namFile: nam.file ? nam.displayName : resolved.namFile,
+    irFile: ir.file ? ir.displayName : resolved.irFile,
+    namFileUrl: resolved.namFileUrl,
+    irFileUrl: resolved.irFileUrl,
+    gain: optionalNum(gainIn),
+    bass: optionalNum(bassIn),
+    mid: optionalNum(midIn),
+    treble: optionalNum(trebleIn),
+    presence: optionalNum(presenceIn),
+    tuning: tuning.trim() || undefined,
+    guitarType: guitarType || undefined,
+    pickupPosition: pickupPosition || undefined,
+    playStyle: playStyle || undefined,
+    tightness: optionalNum(tightnessIn),
+    clarity: optionalNum(clarityIn),
+    noiseLevel: optionalNum(noiseLevelIn),
+    ampStyle,
+  });
 
   const handleSave = async () => {
     if (guestMode || !user) return;
@@ -228,31 +298,22 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
       }
 
       const resolved = resolveNamIrForSave();
-
-      const baseFields = {
-        name: trimmed,
-        tags: selectedTags,
-        notes: notes.trim(),
-        namFile: nam.file ? nam.displayName : resolved.namFile,
-        irFile: ir.file ? ir.displayName : resolved.irFile,
-        favorite,
-        ampStyle,
-      };
+      const baseCard = buildBaseCard(trimmed, resolved);
 
       if (isEdit && editTone) {
         const nextNamURL = nam.file
           ? (namPublic ?? nam.objectUrl)
-          : resolved.namFileURL;
+          : resolved.namFileUrl;
         const nextIrURL = ir.file
           ? (irPublic ?? ir.objectUrl)
-          : resolved.irFileURL;
+          : resolved.irFileUrl;
 
         if (!isSupabaseConfigured()) {
-          const updated: Tone = {
+          const updated: ToneCard = {
             ...editTone,
-            ...baseFields,
-            namFileURL: nam.file ? nam.objectUrl : nextNamURL,
-            irFileURL: ir.file ? ir.objectUrl : nextIrURL,
+            ...baseCard,
+            namFileUrl: nam.file ? nam.objectUrl : nextNamURL,
+            irFileUrl: ir.file ? ir.objectUrl : nextIrURL,
           };
           updateToneLocal(updated);
           selectTone(updated);
@@ -264,15 +325,28 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
         }
 
         const remote = await updateToneRemote(editTone.id, {
-          name: baseFields.name,
-          tags: baseFields.tags,
-          notes: baseFields.notes || null,
-          nam_file: baseFields.namFile || null,
-          ir_file: baseFields.irFile || null,
+          name: baseCard.name,
+          genre_tags: baseCard.genreTags,
+          description: baseCard.description ?? null,
+          mix_notes: baseCard.mixNotes ?? null,
+          nam_file: baseCard.namFile || null,
+          ir_file: baseCard.irFile || null,
           nam_file_url: nextNamURL,
           ir_file_url: nextIrURL,
-          favorite: baseFields.favorite,
-          amp_style: baseFields.ampStyle ?? 'modern-black',
+          amp_model: baseCard.ampModel ?? null,
+          gain: baseCard.gain,
+          bass: baseCard.bass,
+          mid: baseCard.mid,
+          treble: baseCard.treble,
+          presence: baseCard.presence,
+          tuning: baseCard.tuning ?? null,
+          guitar_type: baseCard.guitarType ?? null,
+          pickup_position: baseCard.pickupPosition ?? null,
+          play_style: baseCard.playStyle ?? null,
+          tightness: baseCard.tightness,
+          clarity: baseCard.clarity,
+          noise_level: baseCard.noiseLevel,
+          amp_style: baseCard.ampStyle ?? 'modern-black',
         });
 
         if (remote) {
@@ -285,11 +359,11 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
           return;
         }
 
-        const fallback: Tone = {
+        const fallback: ToneCard = {
           ...editTone,
-          ...baseFields,
-          namFileURL: nextNamURL ?? nam.objectUrl ?? editTone.namFileURL,
-          irFileURL: nextIrURL ?? ir.objectUrl ?? editTone.irFileURL,
+          ...baseCard,
+          namFileUrl: nextNamURL ?? nam.objectUrl ?? editTone.namFileUrl,
+          irFileUrl: nextIrURL ?? ir.objectUrl ?? editTone.irFileUrl,
         };
         updateToneLocal(fallback);
         selectTone(fallback);
@@ -302,12 +376,14 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
 
       /* create */
       if (!isSupabaseConfigured()) {
-        const localTone: Tone = {
+        const now = new Date().toISOString();
+        const localTone: ToneCard = {
           id: uuidv4(),
-          ...baseFields,
-          namFileURL: nam.objectUrl,
-          irFileURL: ir.objectUrl,
-          createdAt: new Date().toISOString().slice(0, 10),
+          ...baseCard,
+          namFileUrl: nam.objectUrl,
+          irFileUrl: ir.objectUrl,
+          createdAt: now.slice(0, 10),
+          updatedAt: now,
         };
         addTone(localTone);
         setSyncStatus('local');
@@ -319,9 +395,9 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
 
       const created = await createTone(
         {
-          ...baseFields,
-          namFileURL: namPublic,
-          irFileURL: irPublic,
+          ...baseCard,
+          namFileUrl: namPublic,
+          irFileUrl: irPublic,
         },
         user.id,
       );
@@ -334,12 +410,14 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
         return;
       }
 
-      const fallback: Tone = {
+      const now = new Date().toISOString();
+      const fallback: ToneCard = {
         id: uuidv4(),
-        ...baseFields,
-        namFileURL: namPublic ?? nam.objectUrl,
-        irFileURL: irPublic ?? ir.objectUrl,
-        createdAt: new Date().toISOString().slice(0, 10),
+        ...baseCard,
+        namFileUrl: namPublic ?? nam.objectUrl,
+        irFileUrl: irPublic ?? ir.objectUrl,
+        createdAt: now.slice(0, 10),
+        updatedAt: now,
       };
       addTone(fallback);
       setSyncStatus('local');
@@ -368,6 +446,30 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
         ? 'Save changes'
         : 'Save Tone';
 
+  const numField = (
+    id: string,
+    label: string,
+    value: string,
+    onChange: (v: string) => void,
+    hint?: string,
+  ) => (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className={labelClass}>
+        {label}
+      </label>
+      <input
+        id={id}
+        type="number"
+        step="any"
+        disabled={formDisabled}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={hint ?? 'Leave empty if unknown'}
+        className={inputClass}
+      />
+    </div>
+  );
+
   return (
     <>
       {forgeGlow ? (
@@ -377,153 +479,242 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
         />
       ) : null}
       <div className="flex h-full min-h-0 flex-col lg:flex-row lg:overflow-hidden">
-      <div className="min-h-0 flex-1 overflow-y-auto border-brand-border p-8 lg:max-w-xl lg:shrink-0 lg:border-r">
-        <div className="mb-8">
-          <h1 className="mb-1 font-display-heading text-4xl font-semibold text-brand-text">
-            {title}
-          </h1>
-          <p className="text-sm text-brand-subtext">{subtitle}</p>
-        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto border-brand-border p-8 lg:max-w-xl lg:shrink-0 lg:border-r">
+          <div className="mb-8">
+            <h1 className="mb-1 font-display-heading text-4xl font-semibold text-brand-text">
+              {title}
+            </h1>
+            <p className="text-sm text-brand-subtext">{subtitle}</p>
+          </div>
 
-        <div className="flex flex-col gap-6">
-          {guestMode ? (
-            <div className="rounded-md border border-brand-accent/30 bg-brand-accent/10 p-4">
-              <p className="mb-3 font-body text-sm text-brand-text">
-                Sign in with Google to save your tones
-              </p>
+          <div className="flex flex-col gap-6">
+            {guestMode ? (
+              <div className="rounded-md border border-brand-accent/30 bg-brand-accent/10 p-4">
+                <p className="mb-3 font-body text-sm text-brand-text">
+                  Sign in with Google to save your tones
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void signInWithGoogle()}
+                  className="btn-primary-sm"
+                >
+                  Sign in with Google
+                </button>
+              </div>
+            ) : null}
+
+            {submitError ? (
+              <p className="text-sm text-red-400">{submitError}</p>
+            ) : null}
+
+            <div className="flex flex-col gap-1.5">
+              <label className={labelClass}>Tone Name *</label>
+              <input
+                disabled={formDisabled}
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (nameError) setNameError('');
+                }}
+                placeholder="e.g. Metal Rhythm Tight"
+                className={inputClass}
+              />
+              {nameError ? (
+                <p className="text-sm text-red-400">{nameError}</p>
+              ) : null}
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className={labelClass}>Description</label>
+              <textarea
+                disabled={formDisabled}
+                rows={3}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Why this tone exists — intent, vibe, use case"
+                className={`resize-none ${inputClass}`}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className={labelClass}>Mix notes</label>
+              <textarea
+                disabled={formDisabled}
+                rows={3}
+                value={mixNotes}
+                onChange={(e) => setMixNotes(e.target.value)}
+                placeholder="How it behaves in a mix — EQ, dynamics, translation"
+                className={`resize-none ${inputClass}`}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className={labelClass}>Amp model</label>
+              <input
+                disabled={formDisabled}
+                value={ampModel}
+                onChange={(e) => setAmpModel(e.target.value)}
+                placeholder="e.g. reference amp or plugin model"
+                className={inputClass}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {numField('gain', 'Gain (0–10)', gainIn, setGainIn)}
+              {numField('bass', 'Bass (0–10)', bassIn, setBassIn)}
+              {numField('mid', 'Mid (0–10)', midIn, setMidIn)}
+              {numField('treble', 'Treble (0–10)', trebleIn, setTrebleIn)}
+              {numField('presence', 'Presence (0–10)', presenceIn, setPresenceIn)}
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="flex flex-col gap-1.5">
+                <label className={labelClass}>Tuning</label>
+                <input
+                  disabled={formDisabled}
+                  value={tuning}
+                  onChange={(e) => setTuning(e.target.value)}
+                  placeholder="e.g. Drop C"
+                  className={inputClass}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className={labelClass}>Play style</label>
+                <select
+                  disabled={formDisabled}
+                  value={playStyle}
+                  onChange={(e) =>
+                    setPlayStyle((e.target.value || '') as PlayStyle | '')
+                  }
+                  className={inputClass}
+                >
+                  <option value="">—</option>
+                  <option value="rhythm">Rhythm</option>
+                  <option value="lead">Lead</option>
+                  <option value="ambient">Ambient</option>
+                  <option value="clean">Clean</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className={labelClass}>Guitar / pickup type</label>
+                <select
+                  disabled={formDisabled}
+                  value={guitarType}
+                  onChange={(e) =>
+                    setGuitarType((e.target.value || '') as GuitarType | '')
+                  }
+                  className={inputClass}
+                >
+                  <option value="">—</option>
+                  <option value="single_coil">Single coil</option>
+                  <option value="humbucker">Humbucker</option>
+                  <option value="active">Active</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className={labelClass}>Pickup position</label>
+                <select
+                  disabled={formDisabled}
+                  value={pickupPosition}
+                  onChange={(e) =>
+                    setPickupPosition(
+                      (e.target.value || '') as PickupPosition | '',
+                    )
+                  }
+                  className={inputClass}
+                >
+                  <option value="">—</option>
+                  <option value="neck">Neck</option>
+                  <option value="middle">Middle</option>
+                  <option value="bridge">Bridge</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {numField(
+                'tightness',
+                'Tightness (0–10)',
+                tightnessIn,
+                setTightnessIn,
+              )}
+              {numField('clarity', 'Clarity (0–10)', clarityIn, setClarityIn)}
+              {numField(
+                'noise',
+                'Noise level (0–10)',
+                noiseLevelIn,
+                setNoiseLevelIn,
+              )}
+            </div>
+
+            <UploadTagField
+              selectedTags={selectedTags}
+              tagInput={tagInput}
+              availableTags={availableTags}
+              disabled={formDisabled}
+              onTagInputChange={handleTagInputChange}
+              onTagInputKeyDown={handleTagInputKeyDown}
+              onRemoveTag={removeTag}
+              onToggleSuggestedTag={toggleTag}
+            />
+
+            <AmpStyleSelect
+              value={ampStyle}
+              disabled={formDisabled}
+              onChange={setAmpStyle}
+            />
+
+            <FileDropRow
+              inputId={isEdit ? 'edit-nam-file-input' : 'nam-file-input'}
+              sectionLabel="NAM file"
+              accept=".nam"
+              Icon={FileAudio}
+              emptyCta="Choose .nam file"
+              displayName={nam.displayName}
+              disabled={formDisabled}
+              inputRef={nam.inputRef}
+              onInputChange={nam.onInputChange}
+              onClear={nam.clear}
+              clearAriaLabel="Remove NAM file"
+            />
+
+            <FileDropRow
+              inputId={isEdit ? 'edit-ir-file-input' : 'ir-file-input'}
+              sectionLabel="IR file"
+              accept=".wav"
+              Icon={Mic2}
+              emptyCta="Choose .wav file"
+              displayName={ir.displayName}
+              disabled={formDisabled}
+              inputRef={ir.inputRef}
+              onInputChange={ir.onInputChange}
+              onClear={ir.clear}
+              clearAriaLabel="Remove IR file"
+            />
+
+            <div className="flex gap-3 pt-2">
               <button
                 type="button"
-                onClick={() => void signInWithGoogle()}
-                className="btn-primary-sm"
+                disabled={formDisabled}
+                onClick={() => void handleSave()}
+                className="btn-primary"
               >
-                Sign in with Google
+                {saveLabel}
+              </button>
+              <button
+                type="button"
+                disabled={uploading}
+                onClick={() => navigate(cancelPath)}
+                className="btn-secondary"
+              >
+                Cancel
               </button>
             </div>
-          ) : null}
-
-          {submitError ? (
-            <p className="text-sm text-red-400">{submitError}</p>
-          ) : null}
-
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-body font-semibold uppercase tracking-wide text-brand-subtext">
-              Tone Name *
-            </label>
-            <input
-              disabled={formDisabled}
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                if (nameError) setNameError('');
-              }}
-              placeholder="e.g. Metal Rhythm Tight"
-              className="rounded-xl border border-brand-border bg-brand-card px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted transition-colors focus:border-brand-accent/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 disabled:opacity-50"
-            />
-            {nameError ? (
-              <p className="text-sm text-red-400">{nameError}</p>
-            ) : null}
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-body font-semibold uppercase tracking-wide text-brand-subtext">
-              Notes
-            </label>
-            <textarea
-              disabled={formDisabled}
-              rows={4}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Describe the tone, amp settings, use cases..."
-              className="resize-none rounded-xl border border-brand-border bg-brand-card px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted transition-colors focus:border-brand-accent/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 disabled:opacity-50"
-            />
-          </div>
-
-          <UploadTagField
-            selectedTags={selectedTags}
-            tagInput={tagInput}
-            availableTags={availableTags}
-            disabled={formDisabled}
-            onTagInputChange={handleTagInputChange}
-            onTagInputKeyDown={handleTagInputKeyDown}
-            onRemoveTag={removeTag}
-            onToggleSuggestedTag={toggleTag}
-          />
-
-          <AmpStyleSelect
-            value={ampStyle}
-            disabled={formDisabled}
-            onChange={setAmpStyle}
-          />
-
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-body font-semibold uppercase tracking-wide text-brand-subtext">
-              Favorite
-            </label>
-            <button
-              type="button"
-              disabled={formDisabled}
-              onClick={() => setFavorite((f) => !f)}
-              className={`w-fit rounded-full border px-4 py-2 font-body text-sm font-medium transition-all duration-200 disabled:opacity-50 ${
-                favorite
-                  ? 'border-brand-accent bg-brand-accent text-black shadow-[0_0_20px_-4px_rgba(232,255,71,0.45)]'
-                  : 'border-brand-border bg-brand-card/60 text-brand-subtext hover:border-brand-accent/35 hover:text-brand-text'
-              }`}
-            >
-              {favorite ? 'Favorited' : 'Not favorited'}
-            </button>
-          </div>
-
-          <FileDropRow
-            inputId={isEdit ? 'edit-nam-file-input' : 'nam-file-input'}
-            sectionLabel="NAM file"
-            accept=".nam"
-            Icon={FileAudio}
-            emptyCta="Choose .nam file"
-            displayName={nam.displayName}
-            disabled={formDisabled}
-            inputRef={nam.inputRef}
-            onInputChange={nam.onInputChange}
-            onClear={nam.clear}
-            clearAriaLabel="Remove NAM file"
-          />
-
-          <FileDropRow
-            inputId={isEdit ? 'edit-ir-file-input' : 'ir-file-input'}
-            sectionLabel="IR file"
-            accept=".wav"
-            Icon={Mic2}
-            emptyCta="Choose .wav file"
-            displayName={ir.displayName}
-            disabled={formDisabled}
-            inputRef={ir.inputRef}
-            onInputChange={ir.onInputChange}
-            onClear={ir.clear}
-            clearAriaLabel="Remove IR file"
-          />
-
-          <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              disabled={formDisabled}
-              onClick={() => void handleSave()}
-              className="btn-primary"
-            >
-              {saveLabel}
-            </button>
-            <button
-              type="button"
-              disabled={uploading}
-              onClick={() => navigate(cancelPath)}
-              className="btn-secondary"
-            >
-              Cancel
-            </button>
           </div>
         </div>
-      </div>
 
-      <UploadAmpPreviewPanel previewTone={previewTone} />
-    </div>
+        <UploadAmpPreviewPanel previewTone={previewTone} />
+      </div>
     </>
   );
 }

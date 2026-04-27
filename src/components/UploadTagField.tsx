@@ -26,7 +26,7 @@ export default function UploadTagField({
   return (
     <div className="flex flex-col gap-2">
       <label className="text-xs font-body font-semibold uppercase tracking-wide text-brand-subtext">
-        Tags
+        Genre tags
       </label>
       {selectedTags.length > 0 ? (
         <div className="mb-1 flex flex-wrap gap-2">

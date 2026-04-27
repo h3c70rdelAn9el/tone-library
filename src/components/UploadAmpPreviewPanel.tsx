@@ -1,11 +1,11 @@
 import AmpHead from './AmpHead';
 import AmpCabinet from './AmpCabinet';
 import { resolveAmpTheme } from '../lib/ampThemes';
-import type { Tone } from '../types/tone';
+import type { ToneCard } from '../types/tone';
 import { useMemo } from 'react';
 
 type UploadAmpPreviewPanelProps = {
-  previewTone: Tone;
+  previewTone: ToneCard;
 };
 
 export default function UploadAmpPreviewPanel({
@@ -29,8 +29,8 @@ export default function UploadAmpPreviewPanel({
         <AmpCabinet theme={theme} />
       </div>
       <p className="mt-2 max-w-sm text-center font-body text-xs text-brand-muted">
-        Updates as you set the name, tags, and amp style. Knob positions reflect
-        tags (cosmetic).
+        Updates as you set the name, genre tags, and amp style. Knob positions
+        reflect saved EQ values when set, otherwise genre tags (cosmetic).
       </p>
     </aside>
   );
