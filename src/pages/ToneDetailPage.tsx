@@ -222,6 +222,33 @@ export default function ToneDetailPage() {
             ) : null}
 
             <div className="mb-8 rounded-2xl border border-brand-border bg-brand-card p-5">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-brand-muted">
+                Tone Controls
+              </p>
+
+              <div className="grid grid-cols-2 gap-3 text-sm text-brand-text">
+                <div>Gain: {tone.gain ?? '—'}</div>
+                <div>Bass: {tone.bass ?? '—'}</div>
+                <div>Mid: {tone.mid ?? '—'}</div>
+                <div>Treble: {tone.treble ?? '—'}</div>
+                <div>Presence: {tone.presence ?? '—'}</div>
+              </div>
+            </div>
+
+            <div className="mb-8 rounded-2xl border border-brand-border bg-brand-card p-5">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-brand-muted">
+                Tone Context
+              </p>
+
+              <div className="space-y-1 text-sm text-brand-text">
+                <div>Tuning: {tone.tuning ?? '—'}</div>
+                <div>Guitar: {tone.guitarType ?? '—'}</div>
+                <div>Pickup: {tone.pickupPosition ?? '—'}</div>
+                <div>Amp Style: {tone.ampStyle ?? '—'}</div>
+              </div>
+            </div>
+
+            <div className="mb-8 rounded-2xl border border-brand-border bg-brand-card p-5">
               <p className="mb-4 font-body text-xs font-semibold uppercase tracking-wide text-brand-muted">
                 Files
               </p>

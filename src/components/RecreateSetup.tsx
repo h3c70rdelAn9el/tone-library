@@ -198,7 +198,12 @@ export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
               </div>
             </form>
           ) : (
-            <RecreateResultView result={result} onBack={resetToForm} onClose={onClose} />
+            <RecreateResultView
+              tone={tone}
+              result={result}
+              onBack={resetToForm}
+              onClose={onClose}
+            />
           )}
         </div>
       </div>
@@ -207,17 +212,16 @@ export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
 }
 
 function RecreateResultView({
+  tone,
   result,
   onBack,
   onClose,
 }: {
+  tone: ToneCard;
   result: RecreateResult;
   onBack: () => void;
   onClose: () => void;
 }) {
-  const hasAdjustments = result.adjustments.length > 0;
-  const hasWarnings = result.warnings.length > 0;
-
   return (
     <div className="flex flex-col gap-6">
       <div className="relative overflow-hidden rounded-2xl border border-brand-accent/25 bg-gradient-to-br from-brand-accent/[0.12] via-brand-card to-brand-surface/90 px-5 py-6">
@@ -232,12 +236,12 @@ function RecreateResultView({
           {result.compatibility}
           <span className="text-2xl font-semibold text-brand-accent/80">%</span>
         </p>
-        <p className="mb-2 mt-3 text-sm text-brand-muted">
+        <p className="mb-3 mt-3 text-sm text-brand-muted">
           {result.compatibility > 80
-            ? 'Very likely to translate well to your setup'
+            ? 'This tone should translate closely to your setup.'
             : result.compatibility > 50
-              ? 'Will need some adjustment'
-              : 'Significant tone shift expected'}
+              ? 'This tone will change character but remain usable.'
+              : 'This tone will behave significantly differently in your setup.'}
         </p>
         <p className="mt-4 font-display text-base font-semibold text-brand-text">
           {result.confidence.label}
@@ -258,39 +262,73 @@ function RecreateResultView({
         ))}
       </div>
 
-      {hasAdjustments ? (
-        <div className="rounded-xl border border-brand-border/80 bg-brand-card/30 px-4 py-4">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-muted">
-            First moves we would try
-          </p>
-          <ul className="mt-3 space-y-2.5 text-sm leading-snug text-brand-text">
-            {result.adjustments.map((item) => (
-              <li key={item} className="flex gap-2">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-accent" />
-                <span>{item}</span>
+      <div className="mb-4">
+        <p className="mb-2 text-xs uppercase text-brand-muted">Adjustments</p>
+        <ul className="space-y-1 text-sm text-brand-text">
+          {result.adjustments.length === 0 ? (
+            <li className="text-brand-muted">—</li>
+          ) : (
+            result.adjustments.map((a, i) => (
+              <li key={`${a}-${i}`}>
+                • {a}
               </li>
-            ))}
-          </ul>
-        </div>
-      ) : (
-        <p className="text-sm italic text-brand-subtext">
-          No specific EQ moves flagged — your setup already lines up with the card.
-        </p>
-      )}
+            ))
+          )}
+        </ul>
+      </div>
 
-      {hasWarnings ? (
-        <div
-          className="rounded-xl border border-amber-500/25 bg-amber-500/[0.07] px-4 py-4"
-          role="status"
+      <div>
+        <p className="mb-2 text-xs uppercase text-brand-muted">Warnings</p>
+        <ul
+          className={`space-y-1 text-sm ${result.warnings.length === 0 ? 'text-brand-muted' : 'text-red-300/80'}`}
         >
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-200/90">
-            Heads up
+          {result.warnings.length === 0 ? (
+            <li>—</li>
+          ) : (
+            result.warnings.map((w, i) => (
+              <li key={`${w}-${i}`}>
+                • {w}
+              </li>
+            ))
+          )}
+        </ul>
+      </div>
+
+      {result.suggestedTone ? (
+        <div className="mt-6 rounded-2xl border border-brand-border bg-brand-card p-5">
+          <p className="mb-2 text-xs uppercase text-brand-muted">
+            Suggested Adaptation
           </p>
-          <ul className="mt-2.5 space-y-2 text-sm leading-relaxed text-amber-100/95">
-            {result.warnings.map((w) => (
-              <li key={w}>{w}</li>
-            ))}
-          </ul>
+          <p className="mb-3 text-xs text-brand-subtext">
+            Starting from <span className="font-medium text-brand-text">{tone.name}</span>
+            {' — '}try these EQ targets (same 0–10 scale as your library).
+          </p>
+          <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+            <div>
+              <span className="text-brand-muted">Gain</span>
+              <div className="font-medium tabular-nums text-brand-text">
+                {result.suggestedTone.gain ?? '—'}
+              </div>
+            </div>
+            <div>
+              <span className="text-brand-muted">Bass</span>
+              <div className="font-medium tabular-nums text-brand-text">
+                {result.suggestedTone.bass ?? '—'}
+              </div>
+            </div>
+            <div>
+              <span className="text-brand-muted">Mid</span>
+              <div className="font-medium tabular-nums text-brand-text">
+                {result.suggestedTone.mid ?? '—'}
+              </div>
+            </div>
+            <div>
+              <span className="text-brand-muted">Treble</span>
+              <div className="font-medium tabular-nums text-brand-text">
+                {result.suggestedTone.treble ?? '—'}
+              </div>
+            </div>
+          </div>
         </div>
       ) : null}
 

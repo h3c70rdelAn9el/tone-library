@@ -19,6 +19,8 @@ export type RecreateResult = {
   notes: string[];
   insights: string[];
   confidence: RecreateConfidence;
+  /** Suggested EQ targets after adaptation rules (only present when at least one value was adjusted). */
+  suggestedTone?: Partial<ToneCard>;
 };
 
 function normTuning(s: string): string {
@@ -178,6 +180,30 @@ export function recreateTone(tone: ToneCard, setup: UserSetup): RecreateResult {
 
   const confidence = buildConfidence(compatibility, userGuitarMissing);
 
+  const suggestedTone: Partial<ToneCard> = {
+    gain: tone.gain,
+    bass: tone.bass,
+    mid: tone.mid,
+    treble: tone.treble,
+  };
+
+  let suggestedTouched = false;
+
+  if (tuningMismatch && tone.bass != null) {
+    suggestedTone.bass = tone.bass - 0.5;
+    suggestedTouched = true;
+  }
+
+  if (guitarMismatch && tone.gain != null) {
+    suggestedTone.gain = tone.gain + 0.5;
+    suggestedTouched = true;
+  }
+
+  if (tone.tightness != null && tone.tightness > 7 && tone.mid != null) {
+    suggestedTone.mid = tone.mid + 0.5;
+    suggestedTouched = true;
+  }
+
   return {
     compatibility,
     adjustments,
@@ -185,5 +211,6 @@ export function recreateTone(tone: ToneCard, setup: UserSetup): RecreateResult {
     notes,
     insights,
     confidence,
+    suggestedTone: suggestedTouched ? suggestedTone : undefined,
   };
 }

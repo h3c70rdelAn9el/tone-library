@@ -107,4 +107,43 @@ describe('recreateTone', () => {
       r.adjustments.some((a) => /low-end/i.test(a)),
     ).toBe(false);
   });
+
+  it('suggestedTone lowers bass on tuning mismatch when bass is set', () => {
+    const tone: ToneCard = {
+      ...baseTone(),
+      tuning: 'Drop C',
+      bass: 6,
+    };
+    const r = recreateTone(tone, {
+      tuning: 'Standard',
+      guitarType: 'humbucker',
+    });
+    expect(r.suggestedTone?.bass).toBe(5.5);
+  });
+
+  it('suggestedTone raises gain on guitar mismatch when gain is set', () => {
+    const tone: ToneCard = {
+      ...baseTone(),
+      guitarType: 'humbucker',
+      gain: 5,
+    };
+    const r = recreateTone(tone, {
+      tuning: 'Standard',
+      guitarType: 'single_coil',
+    });
+    expect(r.suggestedTone?.gain).toBe(5.5);
+  });
+
+  it('suggestedTone raises mid when tightness > 7 and mid is set', () => {
+    const tone: ToneCard = {
+      ...baseTone(),
+      tightness: 8,
+      mid: 4,
+    };
+    const r = recreateTone(tone, {
+      tuning: 'Standard',
+      guitarType: 'humbucker',
+    });
+    expect(r.suggestedTone?.mid).toBe(4.5);
+  });
 });
