@@ -37,6 +37,15 @@ type RecreateStep = 'setup' | 'result';
 const inputClass =
   'rounded-xl border border-brand-border bg-brand-card px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted focus:border-brand-accent/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/20';
 
+/** Highlight when both values are known numbers and they differ (per docs/07). */
+function knobsDiffer(
+  a: number | null | undefined,
+  b: number | null | undefined,
+): boolean {
+  if (a == null || b == null) return false;
+  return a !== b;
+}
+
 export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
   const [tuning, setTuning] = useState(() => initialTuningFromTone(tone));
   const [guitarType, setGuitarType] = useState<GuitarType | ''>(
@@ -310,35 +319,99 @@ function RecreateResultView({
       {result.suggestedTone ? (
         <div className="mt-6 rounded-2xl border border-brand-border bg-brand-card p-5">
           <p className="mb-2 text-xs uppercase text-brand-muted">
-            Suggested Adaptation
+            A / B Comparison
           </p>
-          <p className="mb-3 text-xs text-brand-subtext">
-            Starting from <span className="font-medium text-brand-text">{tone.name}</span>
-            {' — '}try these EQ targets (same 0–10 scale as your library).
+          <p className="mb-4 text-xs text-brand-subtext">
+            What changes if you play this in your setup — same 0–10 scale as your
+            library. Yellow marks a changed knob.
           </p>
-          <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+
+          <div className="grid grid-cols-2 gap-6 text-sm">
             <div>
-              <span className="text-brand-muted">Gain</span>
-              <div className="font-medium tabular-nums text-brand-text">
-                {result.suggestedTone.gain ?? '—'}
+              <p className="mb-2 text-brand-muted">Original</p>
+              <div className="space-y-1">
+                <div
+                  className={
+                    knobsDiffer(tone.gain, result.suggestedTone.gain)
+                      ? 'font-medium tabular-nums text-yellow-400'
+                      : 'tabular-nums text-brand-text'
+                  }
+                >
+                  Gain: {tone.gain ?? '—'}
+                </div>
+                <div
+                  className={
+                    knobsDiffer(tone.bass, result.suggestedTone.bass)
+                      ? 'font-medium tabular-nums text-yellow-400'
+                      : 'tabular-nums text-brand-text'
+                  }
+                >
+                  Bass: {tone.bass ?? '—'}
+                </div>
+                <div
+                  className={
+                    knobsDiffer(tone.mid, result.suggestedTone.mid)
+                      ? 'font-medium tabular-nums text-yellow-400'
+                      : 'tabular-nums text-brand-text'
+                  }
+                >
+                  Mid: {tone.mid ?? '—'}
+                </div>
+                <div
+                  className={
+                    knobsDiffer(tone.treble, result.suggestedTone.treble)
+                      ? 'font-medium tabular-nums text-yellow-400'
+                      : 'tabular-nums text-brand-text'
+                  }
+                >
+                  Treble: {tone.treble ?? '—'}
+                </div>
               </div>
             </div>
+
             <div>
-              <span className="text-brand-muted">Bass</span>
-              <div className="font-medium tabular-nums text-brand-text">
-                {result.suggestedTone.bass ?? '—'}
-              </div>
-            </div>
-            <div>
-              <span className="text-brand-muted">Mid</span>
-              <div className="font-medium tabular-nums text-brand-text">
-                {result.suggestedTone.mid ?? '—'}
-              </div>
-            </div>
-            <div>
-              <span className="text-brand-muted">Treble</span>
-              <div className="font-medium tabular-nums text-brand-text">
-                {result.suggestedTone.treble ?? '—'}
+              <p className="mb-2 text-brand-accent">Adapted</p>
+              <div className="space-y-1">
+                <div
+                  className={
+                    knobsDiffer(tone.gain, result.suggestedTone.gain)
+                      ? 'font-medium tabular-nums text-yellow-400'
+                      : 'tabular-nums text-brand-text'
+                  }
+                >
+                  Gain:{' '}
+                  {result.suggestedTone.gain ?? tone.gain ?? '—'}
+                </div>
+                <div
+                  className={
+                    knobsDiffer(tone.bass, result.suggestedTone.bass)
+                      ? 'font-medium tabular-nums text-yellow-400'
+                      : 'tabular-nums text-brand-text'
+                  }
+                >
+                  Bass:{' '}
+                  {result.suggestedTone.bass ?? tone.bass ?? '—'}
+                </div>
+                <div
+                  className={
+                    knobsDiffer(tone.mid, result.suggestedTone.mid)
+                      ? 'font-medium tabular-nums text-yellow-400'
+                      : 'tabular-nums text-brand-text'
+                  }
+                >
+                  Mid:{' '}
+                  {result.suggestedTone.mid ?? tone.mid ?? '—'}
+                </div>
+                <div
+                  className={
+                    knobsDiffer(tone.treble, result.suggestedTone.treble)
+                      ? 'font-medium tabular-nums text-yellow-400'
+                      : 'tabular-nums text-brand-text'
+                  }
+                >
+                  Treble:{' '}
+                  {result.suggestedTone.treble ?? tone.treble ?? '—'}
+                </div>
               </div>
             </div>
           </div>
