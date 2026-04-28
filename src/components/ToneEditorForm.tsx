@@ -12,8 +12,8 @@ import {
 import { isSupabaseConfigured } from '../lib/supabase';
 import type {
   AmpStyle,
-  GuitarType,
   PickupPosition,
+  PickupType,
   PlayStyle,
   ToneCard,
 } from '../types/tone';
@@ -77,7 +77,8 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
   const [trebleIn, setTrebleIn] = useState('');
   const [presenceIn, setPresenceIn] = useState('');
   const [tuning, setTuning] = useState('');
-  const [guitarType, setGuitarType] = useState<GuitarType | ''>('');
+  const [pickupType, setPickupType] = useState<PickupType | ''>('');
+  const [activePickups, setActivePickups] = useState(false);
   const [pickupPosition, setPickupPosition] = useState<PickupPosition | ''>('');
   const [playStyle, setPlayStyle] = useState<PlayStyle | ''>('');
   const [tightnessIn, setTightnessIn] = useState('');
@@ -114,7 +115,8 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
     setTrebleIn(numToInput(t.treble));
     setPresenceIn(numToInput(t.presence));
     setTuning(t.tuning ?? '');
-    setGuitarType(t.guitarType ?? '');
+    setPickupType(t.pickupType ?? '');
+    setActivePickups(t.activePickups === true);
     setPickupPosition(t.pickupPosition ?? '');
     setPlayStyle(t.playStyle ?? '');
     setTightnessIn(numToInput(t.tightness));
@@ -256,7 +258,8 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
     treble: optionalNum(trebleIn),
     presence: optionalNum(presenceIn),
     tuning: tuning.trim() || undefined,
-    guitarType: guitarType || undefined,
+    pickupType: pickupType || undefined,
+    activePickups: pickupType ? activePickups : undefined,
     pickupPosition: pickupPosition || undefined,
     playStyle: playStyle || undefined,
     tightness: optionalNum(tightnessIn),
@@ -340,7 +343,8 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
           treble: baseCard.treble,
           presence: baseCard.presence,
           tuning: baseCard.tuning ?? null,
-          guitar_type: baseCard.guitarType ?? null,
+          guitar_type: baseCard.pickupType ?? null,
+          active_pickups: baseCard.activePickups === true,
           pickup_position: baseCard.pickupPosition ?? null,
           play_style: baseCard.playStyle ?? null,
           tightness: baseCard.tightness,
@@ -596,20 +600,35 @@ export default function ToneEditorForm(props: ToneEditorFormProps) {
                 </select>
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className={labelClass}>Guitar / pickup type</label>
+                <label className={labelClass}>Pickup type</label>
                 <select
                   disabled={formDisabled}
-                  value={guitarType}
-                  onChange={(e) =>
-                    setGuitarType((e.target.value || '') as GuitarType | '')
-                  }
+                  value={pickupType}
+                  onChange={(e) => {
+                    const v = (e.target.value || '') as PickupType | '';
+                    setPickupType(v);
+                    if (!v) setActivePickups(false);
+                  }}
                   className={inputClass}
                 >
                   <option value="">—</option>
                   <option value="single_coil">Single coil</option>
                   <option value="humbucker">Humbucker</option>
-                  <option value="active">Active</option>
                 </select>
+                <label
+                  className={`flex cursor-pointer items-center gap-2 text-sm ${
+                    pickupType ? 'text-brand-subtext' : 'text-brand-muted'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={activePickups}
+                    disabled={formDisabled || !pickupType}
+                    onChange={(e) => setActivePickups(e.target.checked)}
+                    className="h-4 w-4 rounded border-brand-border bg-brand-card text-brand-accent focus:ring-brand-accent/30"
+                  />
+                  Active pickups
+                </label>
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className={labelClass}>Pickup position</label>

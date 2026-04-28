@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { mockTones, MOCK_DEMO_FAVORITE_IDS } from '../data/mockTones';
-import type { ToneCard } from '../types/tone';
+import type { PickupType, ToneCard } from '../types/tone';
 
 export type SyncStatus = 'synced' | 'local' | 'error' | 'guest';
 
@@ -38,6 +38,32 @@ function seedTones(): ToneCard[] {
 
 function seedFavoriteIds(): string[] {
   return [...MOCK_DEMO_FAVORITE_IDS];
+}
+
+/** Map persisted JSON that still uses `guitarType` / legacy `active` enum value. */
+function migratePersistedTonePickup(t: ToneCard): ToneCard {
+  const legacy = t as ToneCard & { guitarType?: string };
+  if (legacy.guitarType == null) return t;
+  if (legacy.pickupType != null) {
+    const { guitarType: _omit, ...rest } = legacy;
+    return rest as ToneCard;
+  }
+  let pickupType: PickupType | undefined;
+  let activePickups: boolean | undefined;
+  switch (legacy.guitarType) {
+    case 'active':
+      pickupType = 'humbucker';
+      activePickups = true;
+      break;
+    case 'single_coil':
+    case 'humbucker':
+      pickupType = legacy.guitarType;
+      break;
+    default:
+      break;
+  }
+  const { guitarType, ...rest } = legacy;
+  return { ...rest, pickupType, activePickups } as ToneCard;
 }
 
 type LegacyPersistedTone = {
@@ -242,11 +268,13 @@ export const useToneStore = create<ToneStore>()(
           : [...new Set([...seedFavoriteIds(), ...extraFavoriteIds])];
         return {
           ...currentState,
-          tones: tones.map((t) => ({
-            ...t,
-            namFileUrl: t.namFileUrl ?? null,
-            irFileUrl: t.irFileUrl ?? null,
-          })),
+          tones: tones
+            .map(migratePersistedTonePickup)
+            .map((t) => ({
+              ...t,
+              namFileUrl: t.namFileUrl ?? null,
+              irFileUrl: t.irFileUrl ?? null,
+            })),
           favoriteToneIds: fav,
           syncStatus: p?.syncStatus ?? currentState.syncStatus,
           isGuest: currentState.isGuest,

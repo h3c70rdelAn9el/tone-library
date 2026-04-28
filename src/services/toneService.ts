@@ -2,8 +2,8 @@ import supabase, { isSupabaseConfigured } from '../lib/supabase';
 import { mockTones } from '../data/mockTones';
 import type {
   AmpStyle,
-  GuitarType,
   PickupPosition,
+  PickupType,
   PlayStyle,
   ToneCard,
 } from '../types/tone';
@@ -22,10 +22,10 @@ function parseAmpStyle(raw: string | null | undefined): AmpStyle | null {
   return (allowed as string[]).includes(raw) ? (raw as AmpStyle) : null;
 }
 
-function parseGuitarType(raw: string | null | undefined): GuitarType | undefined {
+function parsePickupType(raw: string | null | undefined): PickupType | undefined {
   if (raw == null || raw === '') return undefined;
-  const allowed: GuitarType[] = ['single_coil', 'humbucker', 'active'];
-  return (allowed as string[]).includes(raw) ? (raw as GuitarType) : undefined;
+  const allowed: PickupType[] = ['single_coil', 'humbucker'];
+  return (allowed as string[]).includes(raw) ? (raw as PickupType) : undefined;
 }
 
 function parsePickupPosition(
@@ -60,6 +60,7 @@ type DbToneRow = {
   presence: number | null;
   tuning: string | null;
   guitar_type: string | null;
+  active_pickups?: boolean | null;
   pickup_position: string | null;
   play_style: string | null;
   tightness: number | null;
@@ -91,7 +92,8 @@ function rowToToneCard(row: DbToneRow): ToneCard {
     treble: row.treble,
     presence: row.presence,
     tuning: row.tuning ?? undefined,
-    guitarType: parseGuitarType(row.guitar_type),
+    pickupType: parsePickupType(row.guitar_type),
+    activePickups: row.active_pickups === true ? true : undefined,
     pickupPosition: parsePickupPosition(row.pickup_position),
     genreTags: row.genre_tags ?? [],
     playStyle: parsePlayStyle(row.play_style),
@@ -286,7 +288,8 @@ export async function createTone(
     treble: tone.treble,
     presence: tone.presence,
     tuning: tone.tuning ?? null,
-    guitar_type: tone.guitarType ?? null,
+    guitar_type: tone.pickupType ?? null,
+    active_pickups: tone.activePickups === true,
     pickup_position: tone.pickupPosition ?? null,
     play_style: tone.playStyle ?? null,
     tightness: tone.tightness,
@@ -323,6 +326,7 @@ export type ToneCardDbUpdate = {
   presence: number | null;
   tuning: string | null;
   guitar_type: string | null;
+  active_pickups: boolean;
   pickup_position: string | null;
   play_style: string | null;
   tightness: number | null;

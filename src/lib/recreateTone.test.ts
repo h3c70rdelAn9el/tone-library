@@ -26,7 +26,7 @@ describe('recreateTone', () => {
   it('starts at 100 when tone has no contextual fields', () => {
     const r = recreateTone(baseTone(), {
       tuning: 'Standard',
-      guitarType: 'humbucker',
+      pickupType: 'humbucker',
     });
     expect(r.compatibility).toBe(100);
     expect(r.adjustments).toHaveLength(0);
@@ -37,13 +37,13 @@ describe('recreateTone', () => {
   it('applies -15 and warning when user guitar type is missing', () => {
     const r = recreateTone(baseTone(), { tuning: 'Standard' });
     expect(r.compatibility).toBe(85);
-    expect(r.warnings).toContain('Missing guitar type reduces accuracy');
+    expect(r.warnings).toContain('Missing pickup type reduces accuracy');
   });
 
   it('does not apply pickup mismatch when user guitar is missing', () => {
     const tone: ToneCard = {
       ...baseTone(),
-      guitarType: 'humbucker',
+      pickupType: 'humbucker',
     };
     const r = recreateTone(tone, { tuning: 'Standard' });
     expect(r.compatibility).toBe(85);
@@ -54,11 +54,11 @@ describe('recreateTone', () => {
     const tone: ToneCard = {
       ...baseTone(),
       tuning: 'Drop C',
-      guitarType: 'humbucker',
+      pickupType: 'humbucker',
     };
     const r = recreateTone(tone, {
       tuning: 'Standard',
-      guitarType: 'single_coil',
+      pickupType: 'single_coil',
     });
     expect(r.compatibility).toBe(45);
     expect(r.adjustments.length).toBeGreaterThanOrEqual(2);
@@ -72,7 +72,7 @@ describe('recreateTone', () => {
     };
     const r = recreateTone(tone, {
       tuning: 'Standard',
-      guitarType: 'single_coil',
+      pickupType: 'single_coil',
     });
     expect(r.warnings.some((w) => /noise/i.test(w))).toBe(true);
   });
@@ -84,7 +84,7 @@ describe('recreateTone', () => {
     };
     const r = recreateTone(tone, {
       tuning: 'Standard',
-      guitarType: 'humbucker',
+      pickupType: 'humbucker',
     });
     expect(
       r.adjustments.some((a) => /low-end/i.test(a)),
@@ -101,7 +101,7 @@ describe('recreateTone', () => {
     };
     const r = recreateTone(tone, {
       tuning: 'Drop C',
-      guitarType: 'humbucker',
+      pickupType: 'humbucker',
     });
     expect(
       r.adjustments.some((a) => /low-end/i.test(a)),
@@ -116,7 +116,7 @@ describe('recreateTone', () => {
     };
     const r = recreateTone(tone, {
       tuning: 'Standard',
-      guitarType: 'humbucker',
+      pickupType: 'humbucker',
     });
     expect(r.suggestedTone?.bass).toBe(5.5);
   });
@@ -124,12 +124,12 @@ describe('recreateTone', () => {
   it('suggestedTone raises gain on guitar mismatch when gain is set', () => {
     const tone: ToneCard = {
       ...baseTone(),
-      guitarType: 'humbucker',
+      pickupType: 'humbucker',
       gain: 5,
     };
     const r = recreateTone(tone, {
       tuning: 'Standard',
-      guitarType: 'single_coil',
+      pickupType: 'single_coil',
     });
     expect(r.suggestedTone?.gain).toBe(5.5);
   });
@@ -142,7 +142,7 @@ describe('recreateTone', () => {
     };
     const r = recreateTone(tone, {
       tuning: 'Standard',
-      guitarType: 'humbucker',
+      pickupType: 'humbucker',
     });
     expect(r.suggestedTone?.mid).toBe(4.5);
   });
@@ -154,7 +154,7 @@ describe('recreateTone', () => {
     };
     const r = recreateTone(tone, {
       tuning: 'Standard',
-      guitarType: 'humbucker',
+      pickupType: 'humbucker',
       playStyle: 'rhythm',
     });
     expect(r.compatibility).toBe(90);
@@ -174,7 +174,7 @@ describe('recreateTone', () => {
     };
     const r = recreateTone(tone, {
       tuning: 'Standard',
-      guitarType: 'humbucker',
+      pickupType: 'humbucker',
       playStyle: 'clean',
     });
     expect(r.compatibility).toBe(95);
@@ -191,7 +191,7 @@ describe('recreateTone', () => {
     };
     const r = recreateTone(tone, {
       tuning: 'Standard',
-      guitarType: 'humbucker',
+      pickupType: 'humbucker',
       playStyle: 'lead',
     });
     expect(r.compatibility).toBe(95);
@@ -203,10 +203,72 @@ describe('recreateTone', () => {
   it('echoes setup context in notes and adds home-volume hint for bedroom', () => {
     const r = recreateTone(baseTone(), {
       tuning: 'Standard',
-      guitarType: 'humbucker',
+      pickupType: 'humbucker',
       context: '  Bedroom practice  ',
     });
     expect(r.notes.some((n) => /Bedroom practice/.test(n))).toBe(true);
     expect(r.adjustments.some((a) => /home volume/i.test(a))).toBe(true);
+  });
+
+  it('penalizes when context implies metal but the tone reads clean', () => {
+    const tone: ToneCard = {
+      ...baseTone(),
+      name: 'Clean glassy strat',
+      gain: 3,
+    };
+    const r = recreateTone(tone, {
+      tuning: 'Standard',
+      pickupType: 'humbucker',
+      context: 'I want metal rhythm chugs',
+    });
+    expect(r.compatibility).toBe(60);
+    expect(r.warnings.some((w) => /aggressive|high-gain|metal/i.test(w))).toBe(true);
+    expect(r.insights[0]).toMatch(/softer-voiced|heavy/i);
+    expect(r.suggestedTone?.gain).toBe(5);
+  });
+
+  it('penalizes when context implies clean but the tone reads heavy', () => {
+    const tone: ToneCard = {
+      ...baseTone(),
+      name: 'Metal rhythm tight',
+      gain: 7,
+    };
+    const r = recreateTone(tone, {
+      tuning: 'Standard',
+      pickupType: 'humbucker',
+      context: 'clean jazz chime',
+    });
+    expect(r.compatibility).toBe(65);
+    expect(r.warnings.some((w) => /clean.*low-gain|heavier drive/i.test(w))).toBe(true);
+    expect(r.suggestedTone?.gain).toBe(5.5);
+  });
+
+  it('does not goal-mismatch when context mixes clean and heavy cues', () => {
+    const tone: ToneCard = {
+      ...baseTone(),
+      name: 'Clean glassy strat',
+      gain: 3,
+    };
+    const r = recreateTone(tone, {
+      tuning: 'Standard',
+      pickupType: 'humbucker',
+      context: 'clean metal fusion',
+    });
+    expect(r.compatibility).toBe(100);
+  });
+
+  it('penalizes when context is blues but the tone reads high-gain', () => {
+    const tone: ToneCard = {
+      ...baseTone(),
+      name: 'Metal rhythm tight',
+      gain: 7,
+    };
+    const r = recreateTone(tone, {
+      tuning: 'Standard',
+      pickupType: 'humbucker',
+      context: 'slow blues lead srv style',
+    });
+    expect(r.compatibility).toBe(65);
+    expect(r.warnings.some((w) => /roots|groove|heavier/i.test(w))).toBe(true);
   });
 });
