@@ -22,6 +22,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import RecreateSetup from '../components/RecreateSetup';
+import { formatPickupLabel } from '../lib/pickupLabels';
 
 function downloadBlob(url: string, filename: string) {
   const a = document.createElement('a');
@@ -242,8 +243,11 @@ export default function ToneDetailPage() {
 
               <div className="space-y-1 text-sm text-brand-text">
                 <div>Tuning: {tone.tuning ?? '—'}</div>
-                <div>Guitar: {tone.guitarType ?? '—'}</div>
-                <div>Pickup: {tone.pickupPosition ?? '—'}</div>
+                <div>
+                  Pickup type:{' '}
+                  {formatPickupLabel(tone.pickupType, tone.activePickups)}
+                </div>
+                <div>Pickup position: {tone.pickupPosition ?? '—'}</div>
                 <div>Amp Style: {tone.ampStyle ?? '—'}</div>
               </div>
             </div>
@@ -319,13 +323,16 @@ export default function ToneDetailPage() {
             </div>
 
             <div className="mb-8">
-              {(tone.tuning || tone.guitarType) ? (
+              {(tone.tuning || tone.pickupType) ? (
                 <div className="mb-2 flex flex-wrap gap-2 text-xs text-brand-muted">
                   {tone.tuning ? (
                     <span>🎸 {tone.tuning}</span>
                   ) : null}
-                  {tone.guitarType ? (
-                    <span>⚡ {tone.guitarType}</span>
+                  {tone.pickupType ? (
+                    <span>
+                      ⚡{' '}
+                      {formatPickupLabel(tone.pickupType, tone.activePickups)}
+                    </span>
                   ) : null}
                 </div>
               ) : null}

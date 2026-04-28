@@ -4,7 +4,8 @@ export type AmpStyle =
   | 'british-gold'
   | 'custom-dark';
 
-export type GuitarType = 'single_coil' | 'humbucker' | 'active';
+/** Coil / pickup family — active electronics are a separate flag. */
+export type PickupType = 'single_coil' | 'humbucker';
 
 export type PickupPosition = 'neck' | 'middle' | 'bridge';
 
@@ -29,7 +30,9 @@ export type ToneCard = {
   presence: number | null;
 
   tuning?: string;
-  guitarType?: GuitarType;
+  pickupType?: PickupType;
+  /** Higher output / buffered — can be single coil or humbucker. */
+  activePickups?: boolean;
   pickupPosition?: PickupPosition;
   genreTags: string[];
 

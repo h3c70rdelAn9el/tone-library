@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import type {
-  GuitarType,
   PickupPosition,
+  PickupType,
   PlayStyle,
   ToneCard,
 } from '../types/tone';
+import { formatPickupLabel } from '../lib/pickupLabels';
 import {
   recreateTone,
   type RecreateResult,
@@ -21,10 +22,9 @@ const TUNING_OPTIONS = [
   { value: 'Open G', label: 'Open G' },
 ];
 
-const GUITAR_TYPES: { value: GuitarType; label: string }[] = [
+const PICKUP_TYPES: { value: PickupType; label: string }[] = [
   { value: 'single_coil', label: 'Single coil' },
   { value: 'humbucker', label: 'Humbucker' },
-  { value: 'active', label: 'Active' },
 ];
 
 const PLAY_STYLES: { value: PlayStyle; label: string }[] = [
@@ -60,8 +60,11 @@ function knobsDiffer(
 
 export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
   const [tuning, setTuning] = useState(() => initialTuningFromTone(tone));
-  const [guitarType, setGuitarType] = useState<GuitarType | ''>(
-    () => tone.guitarType ?? '',
+  const [pickupType, setPickupType] = useState<PickupType | ''>(
+    () => tone.pickupType ?? '',
+  );
+  const [activePickups, setActivePickups] = useState(
+    () => tone.activePickups === true,
   );
   const [pickupPosition, setPickupPosition] = useState<PickupPosition | ''>(
     () => tone.pickupPosition ?? '',
@@ -77,7 +80,8 @@ export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
     e.preventDefault();
     const setup: UserSetup = {
       tuning,
-      guitarType: guitarType || undefined,
+      pickupType: pickupType || undefined,
+      activePickups: pickupType ? activePickups : undefined,
       pickupPosition: pickupPosition || undefined,
       playStyle: playStyle || undefined,
       context: context.trim() || undefined,
@@ -138,7 +142,9 @@ export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
               <div className="mb-4 text-xs text-brand-muted">
                 Based on: {tone.name}
                 {tone.tuning ? ` · Tuning: ${tone.tuning}` : ''}
-                {tone.guitarType ? ` · ${tone.guitarType}` : ''}
+                {tone.pickupType
+                  ? ` · ${formatPickupLabel(tone.pickupType, tone.activePickups)}`
+                  : ''}
                 {tone.playStyle
                   ? ` · ${PLAY_STYLES.find((p) => p.value === tone.playStyle)?.label ?? tone.playStyle}`
                   : ''}
@@ -207,16 +213,16 @@ export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
 
               <div className="flex flex-col gap-2">
                 <span className="text-xs font-semibold uppercase tracking-wide text-brand-subtext">
-                  Your guitar type
+                  Your pickup type
                 </span>
                 <div className="flex flex-wrap gap-2">
-                  {GUITAR_TYPES.map(({ value, label }) => (
+                  {PICKUP_TYPES.map(({ value, label }) => (
                     <button
                       key={value}
                       type="button"
-                      onClick={() => setGuitarType(value)}
+                      onClick={() => setPickupType(value)}
                       className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                        guitarType === value
+                        pickupType === value
                           ? 'border-brand-accent bg-brand-accent/15 text-brand-accent'
                           : 'border-brand-border bg-brand-card/60 text-brand-subtext hover:border-brand-accent/35'
                       }`}
@@ -225,10 +231,27 @@ export default function RecreateSetup({ tone, onClose }: RecreateSetupProps) {
                     </button>
                   ))}
                 </div>
+                <label
+                  className={`flex cursor-pointer items-center gap-2 text-sm ${
+                    pickupType ? 'text-brand-subtext' : 'text-brand-muted'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={activePickups}
+                    disabled={!pickupType}
+                    onChange={(e) => setActivePickups(e.target.checked)}
+                    className="h-4 w-4 rounded border-brand-border bg-brand-card text-brand-accent focus:ring-brand-accent/30"
+                  />
+                  Active pickups (works with single coil or humbucker)
+                </label>
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <button
                     type="button"
-                    onClick={() => setGuitarType('')}
+                    onClick={() => {
+                      setPickupType('');
+                      setActivePickups(false);
+                    }}
                     className="text-[11px] text-brand-muted underline decoration-brand-border underline-offset-2 hover:text-brand-text"
                   >
                     Not sure — skip
@@ -511,7 +534,7 @@ function RecreateResultView({
         <button
           type="button"
           onClick={onRefineSetup}
-          className="btn-secondary mt-4"
+          className="btn-secondary"
         >
           Refine setup →
         </button>
